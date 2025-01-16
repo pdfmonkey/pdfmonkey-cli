@@ -5,6 +5,10 @@
   "main": "index.js",
   "author": "Simon Courtois",
   "license": "MIT",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
   "dependencies": {
     "@clack/prompts": "^0.9.1",
     "chalk": "^5.4.1",
@@ -13,6 +17,11 @@
     "diff": "^7.0.0",
     "livereload": "^0.9.3",
     "open": "^10.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "eslint": "^9.18.0",
+    "globals": "^15.14.0"
   },
   "bin": {
     "pdfmonkey": "./bin/index.js"
