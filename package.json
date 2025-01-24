@@ -1,6 +1,6 @@
 {
   "name": "@pdfmonkey/cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A CLI tool to edit your PDFMonkey template locally with your favorite tools.",
   "keywords": [
     "PDFMonkey",

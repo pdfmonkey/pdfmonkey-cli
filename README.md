@@ -9,7 +9,7 @@ This CLI tool is a great solution for developers who want to author [PDFMonkey](
 The PDFMonkey CLI can be installed using npm.
 
 ```bash
-npm install -g pdfmonkey-cli
+npm install -g @pdfmonkey/cli
 ```
 
 Once installed, the `pdfmonkey` command will be available in your terminal.
