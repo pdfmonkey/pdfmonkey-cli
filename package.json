@@ -2,6 +2,21 @@
   "name": "@pdfmonkey/cli",
   "version": "1.0.0",
   "description": "A CLI tool to edit your PDFMonkey template locally with your favorite tools.",
+  "keywords": [
+    "PDFMonkey",
+    "PDF",
+    "CLI",
+    "automation",
+    "tools"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pdfmonkey/pdfmonkey-cli.git"
+  },
+  "homepage": "https://pdfmonkey.io",
+  "bugs": {
+    "url": "https://github.com/pdfmonkey/pdfmonkey-cli/issues"
+  },
   "main": "index.js",
   "author": "Simon Courtois",
   "license": "MIT",
@@ -32,7 +47,18 @@
     "prettier": "^3.4.2"
   },
   "bin": {
-    "pdfmonkey": "./bin/index.js"
+    "pdfmonkey": "bin/index.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "LICENSE",
+    "README.md"
+  ],
+  "node": ">=18",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "type": "module",
   "lint-staged": {
