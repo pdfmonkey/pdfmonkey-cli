@@ -85,3 +85,60 @@ export async function updateTemplate(templateId, apiKey, path) {
 
   return { success: true, template: json.document_template };
 }
+
+// Fetch all workspaces from PDFMonkey
+//
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<array>} The workspaces
+export async function getWorkspaces(apiKey) {
+  const url = "https://api.pdfmonkey.io/api/v1/workspace_cards";
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const response = await fetch(url, { headers });
+  const json = await response.json();
+
+  if (json.errors) {
+    log.error(formatErrors(json.errors));
+    return null;
+  }
+
+  return json.workspace_cards.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+}
+
+// Fetch all templates from PDFMonkey for a specific workspace
+//
+// @param {string} workspaceId - The ID of the workspace
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<array>} The templates
+export async function getTemplates(workspaceId, apiKey) {
+  const url = `https://api.pdfmonkey.io/api/v1/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const response = await fetch(url, { headers });
+  const json = await response.json();
+
+  if (json.errors) {
+    log.error(formatErrors(json.errors));
+    return null;
+  }
+
+  const templates = json.document_template_cards.map((template) => {
+    return {
+      ...template,
+      display_name: [template.template_folder_identifier, template.identifier].filter(Boolean).join(" / "),
+    };
+  });
+
+  return templates.sort((a, b) => {
+    const folderA = a.template_folder_identifier || "";
+    const folderB = b.template_folder_identifier || "";
+
+    if (folderA === "" && folderB !== "") return -1;
+    if (folderA !== "" && folderB === "") return 1;
+
+    const folderComparison = folderA.toLowerCase().localeCompare(folderB.toLowerCase());
+    if (folderComparison !== 0) return folderComparison;
+
+    return a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase());
+  });
+}

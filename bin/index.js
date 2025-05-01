@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-/* eslint-disable prettier/prettier */
 
 import { program } from "commander";
 
@@ -14,7 +13,7 @@ program
 program
   .command("init")
   .description("Initialize a PDFMonkey template folder")
-  .argument("<templateId>", "The ID of the template to use")
+  .argument("[templateId]", "The ID of the template to use")
   .argument("[path]", "The path to the template folder (default: ID of the template in current folder)")
   .option("-e, --edit", "Opens the template folder in your default editor (based on EDITOR environment variable)")
   .option(

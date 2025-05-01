@@ -5,10 +5,12 @@ import { confirm, intro, isCancel, cancel, log, outro, select, text } from "@cla
 import { existsSync, mkdirSync, readdirSync } from "fs";
 
 import { gracefullyShutdownUponCtrlC } from "../utils/term.js";
-import { getTemplate } from "../utils/pdfmonkey.js";
+import { getTemplate, getWorkspaces, getTemplates } from "../utils/pdfmonkey.js";
 import { writeTemplateContent } from "../utils/files.js";
 
 export default async function initCommand(templateId, path, { apiKey, edit }) {
+  templateId ??= await runTemplateSelection(apiKey);
+
   intro(`Initializing template ${chalk.yellow(templateId)}`);
 
   gracefullyShutdownUponCtrlC(cancelOperation);
@@ -121,4 +123,75 @@ function openEditor(path, edit) {
   } else {
     log.error("No editor found. Please set the EDITOR environment variable to use this feature.");
   }
+}
+
+async function runTemplateSelection(apiKey) {
+  const workspaceId = await pickWorkspace(apiKey);
+  const templateId = await pickTemplate(workspaceId, apiKey);
+
+  return templateId;
+}
+
+async function pickWorkspace(apiKey) {
+  intro("Fetching workspaces...");
+
+  let selectedWorkspace;
+  const workspaces = await getWorkspaces(apiKey);
+
+  if (!workspaces || workspaces.length === 0) {
+    outro("No workspaces found");
+    cancelOperation();
+  }
+
+  if (workspaces.length === 1) {
+    selectedWorkspace = workspaces[0];
+  } else {
+    selectedWorkspace = await select({
+      message: "Select a workspace",
+      options: workspaces.map((workspace) => ({
+        value: workspace,
+        label: workspace.identifier,
+      })),
+    });
+  }
+
+  if (isCancel(selectedWorkspace)) {
+    cancelOperation();
+  }
+
+  outro(`Using workspace: ${chalk.yellow(selectedWorkspace.identifier)}`);
+
+  return selectedWorkspace.id;
+}
+
+async function pickTemplate(workspaceId, apiKey) {
+  intro("Fetching templates...");
+
+  let selectedTemplate;
+  const templates = await getTemplates(workspaceId, apiKey);
+
+  if (!templates || templates.length === 0) {
+    outro("No templates found");
+    cancelOperation();
+  }
+
+  if (templates.length === 1) {
+    selectedTemplate = templates[0];
+  } else {
+    selectedTemplate = await select({
+      message: "Select a template",
+      options: templates.map((template) => ({
+        value: template,
+        label: template.display_name,
+      })),
+    });
+  }
+
+  if (isCancel(selectedTemplate)) {
+    cancelOperation();
+  }
+
+  outro(`Using template: ${chalk.yellow(selectedTemplate.display_name)}`);
+
+  return selectedTemplate.id;
 }

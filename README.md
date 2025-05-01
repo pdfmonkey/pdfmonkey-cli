@@ -39,10 +39,18 @@ There are two ways to authenticate with the PDFMonkey CLI:
 To start editing a PDFMonkey template, run the following command:
 
 ```bash
-pdfmonkey init <template-id>
+pdfmonkey template init
 ```
 
-You will then be prompted to choose the destination directory for the template files. You can also specify the destnation folder as a second argument.
+The command will help you select a workspace and find the template you want to edit.
+
+Alternatively, you can specify the template ID as a second argument.
+
+```bash
+pdfmonkey template init <template-id>
+```
+
+You will then be prompted to choose the destination folder for the template files. You can also specify the destnation folder as a second argument.
 
 ```bash
 pdfmonkey init <template-id> <destination-folder>
@@ -136,11 +144,11 @@ DIFF=delta PAGER=delta pdfmonkey watch
 
 Here is a summary of the environment variables that can be set to customize the behavior of the CLI:
 
-* `PDFMONKEY_API_KEY`: The API key to use for authentication.
-* `DIFF`: The diff tool to use.
-* `PAGER`: The pager to use when displaying diffs.
-* `PORT`: The port to run the preview server on.
-* `LIVE_RELOAD_PORT`: The port to run the live-reload server on.
+- `PDFMONKEY_API_KEY`: The API key to use for authentication.
+- `DIFF`: The diff tool to use.
+- `PAGER`: The pager to use when displaying diffs.
+- `PORT`: The port to run the preview server on.
+- `LIVE_RELOAD_PORT`: The port to run the live-reload server on.
 
 ## License
 
