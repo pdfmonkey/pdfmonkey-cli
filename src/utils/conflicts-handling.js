@@ -12,7 +12,7 @@ async function handleConflict(remoteData, remoteUpdatedAt, path, filename) {
   const attributeName = fileToAttributeName[filename];
   let choice = undefined;
 
-  if (`${remoteData}` === `${localData}`) {
+  if ((remoteData ?? "") === (localData ?? "")) {
     return true;
   }
 
