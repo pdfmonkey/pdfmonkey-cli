@@ -34,7 +34,47 @@ There are two ways to authenticate with the PDFMonkey CLI:
 >
 > The commands below will **assume the API key is set in the environment variable.**
 
-## Init
+## Command Structure
+
+PDFMonkey CLI supports two command structures:
+
+### Resource-based Commands (Recommended)
+
+Commands are organized by resource type:
+
+```bash
+pdfmonkey <resource> <command> [options]
+```
+
+Currently supported resources:
+
+- `template` or `tpl`: Manage PDFMonkey templates
+
+For example:
+
+```bash
+pdfmonkey template init <template-id>
+# or using the shorthand alias
+pdfmonkey tpl init <template-id>
+```
+
+### Direct Commands (shorthand)
+
+Templates being the most common resource, the CLI also supports direct commands:
+
+```bash
+pdfmonkey init <template-id>
+# is the same as
+pdfmonkey template init <template-id>
+
+pdfmonkey watch <path>
+# is the same as
+pdfmonkey template watch <path>
+```
+
+## Template Management
+
+### Init
 
 To start editing a PDFMonkey template, run the following command:
 
@@ -53,7 +93,7 @@ pdfmonkey template init <template-id>
 You will then be prompted to choose the destination folder for the template files. You can also specify the destnation folder as a second argument.
 
 ```bash
-pdfmonkey init <template-id> <destination-folder>
+pdfmonkey template init <template-id> <destination-folder>
 ```
 
 > [!TIP]
@@ -62,15 +102,15 @@ pdfmonkey init <template-id> <destination-folder>
 > You can also open the created folder in your default editor using the `-e` or `--edit` option.
 >
 > ```bash
-> pdfmonkey init <template-id> -e
+> pdfmonkey template init <template-id> -e
 > ```
 
-## Watch
+### Watch
 
 To start watching a template folder and sync the changes to PDFMonkey, run the following command:
 
 ```bash
-pdfmonkey watch -t <template-id>
+pdfmonkey template watch -t <template-id>
 ```
 
 This will start watching files in **the current folder** and sync automatically.
@@ -78,7 +118,7 @@ This will start watching files in **the current folder** and sync automatically.
 To monitor a different folder, simply pass the path as first argument:
 
 ```bash
-pdfmonkey watch <path> -t <template-id>
+pdfmonkey template watch <path> -t <template-id>
 ```
 
 > [!TIP]
@@ -90,7 +130,7 @@ pdfmonkey watch <path> -t <template-id>
 > pwd
 > /Users/pdfmonkey/templates/B1001CF2-53FC-4DC6-B51D-36B358743752
 >
-> pdfmonkey watch
+> pdfmonkey template watch
 > # Watches the current folder and syncs the matching template
 > ```
 
@@ -101,19 +141,19 @@ The `watch` command will start a local server to preview the template. The previ
 You can open the preview when the server is running using the `-o` or `--open-browser` option.
 
 ```bash
-pdfmonkey watch -o
+pdfmonkey template watch -o
 ```
 
 By default, the preview server runs on port 2081 and the live-reload server runs on port 2082. You can specify different ports using the `-p/--port` and `-l/--livereload-port` options.
 
 ```bash
-pdfmonkey watch -p 2083 -l 2084
+pdfmonkey template watch -p 2083 -l 2084
 ```
 
 Alternatively, you can set the `PORT` and `LIVE_RELOAD_PORT` environment variables to customize the ports.
 
 ```bash
-PORT=2083 LIVE_RELOAD_PORT=2084 pdfmonkey watch
+PORT=2083 LIVE_RELOAD_PORT=2084 pdfmonkey template watch
 ```
 
 ### Debug Preview
@@ -121,7 +161,7 @@ PORT=2083 LIVE_RELOAD_PORT=2084 pdfmonkey watch
 Sometimes, it can be easier to debug the generated HTML instead of the PDF. You can do this by using the `-D` or `--debug` option.
 
 ```bash
-pdfmonkey watch -D -o
+pdfmonkey template watch -D -o
 ```
 
 This will open the debug preview in your default browser.
@@ -137,7 +177,7 @@ When starting the `watch` command, the CLI will check if there are any conflicts
 By default, the diff tool used is `diff -u` and the patch is displayed with the `less` pager. You can specify different diff-tool and pager using the `DIFF` and `PAGER` environment variables, respectively.
 
 ```bash
-DIFF=delta PAGER=delta pdfmonkey watch
+DIFF=delta PAGER=delta pdfmonkey template watch
 ```
 
 ## Configuration

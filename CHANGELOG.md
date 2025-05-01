@@ -2,6 +2,7 @@
 
 ## Unpublished
 
+- Adding _resource-based_ commands (e.g. `pdfmonkey template watch`)
 - Making `init` ask for workspace and template if none is provided
 
 ## 1.0.2 (2025-01-24)
