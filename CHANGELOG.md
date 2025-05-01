@@ -2,6 +2,7 @@
 
 ## Unpublished
 
+- Adding template name as local folder name candidate
 - Adding _resource-based_ commands (e.g. `pdfmonkey template watch`)
 - Making `init` ask for workspace and template if none is provided
 

@@ -8,8 +8,16 @@ import { gracefullyShutdownUponCtrlC } from "../utils/term.js";
 import { getTemplate, getWorkspaces, getTemplates } from "../utils/pdfmonkey.js";
 import { writeTemplateContent } from "../utils/files.js";
 
+import shellescape from "shell-escape";
+
 export default async function initCommand(templateId, path, { apiKey, edit }) {
-  templateId ??= await runTemplateSelection(apiKey);
+  let templateIdentifier;
+
+  if (!templateId) {
+    const { id, identifier } = await runTemplateSelection(apiKey);
+    templateId = id;
+    templateIdentifier = identifier;
+  }
 
   intro(`Initializing template ${chalk.yellow(templateId)}`);
 
@@ -20,7 +28,8 @@ export default async function initCommand(templateId, path, { apiKey, edit }) {
     cancelOperation();
   }
 
-  path ??= await askForPath(templateId);
+  templateIdentifier ??= template.identifier;
+  path ??= await askForPath(templateId, templateIdentifier);
 
   ensurePathPresent(path);
   await avoidConflicts(path);
@@ -38,31 +47,35 @@ function printWatchCommand(path, templateId) {
   let watchCommand;
   const templateFolder = path.split("/").pop();
 
+  const watchCommandBase = ["pdfmonkey", "template", "watch"];
+
   if (path == process.cwd() && templateFolder == templateId) {
-    watchCommand = "pdfmonkey watch";
+    watchCommand = watchCommandBase;
   } else if (path == process.cwd()) {
-    watchCommand = `pdfmonkey watch -t ${templateId}`;
+    watchCommand = [...watchCommandBase, "-t", templateId];
   } else if (templateFolder == templateId) {
-    watchCommand = `pdfmonkey watch ${path}`;
+    watchCommand = [...watchCommandBase, path];
   } else {
-    watchCommand = `pdfmonkey watch ${path} -t ${templateId}`;
+    watchCommand = [...watchCommandBase, path, "-t", templateId];
   }
 
   if (!process.env.PDFMONKEY_API_KEY) {
-    watchCommand += " -k YOUR_API_KEY";
+    watchCommand.push("-k", "YOUR_API_KEY");
   }
 
-  log.info(`Watch your template using: ${watchCommand}`);
+  log.info(`Watch your template using: ${shellescape(watchCommand)}`);
 }
 
-async function askForPath(templateId) {
+async function askForPath(templateId, templateIdentifier) {
   let currentDir = process.cwd();
   let defaultPath = nodePath.join(currentDir, templateId);
+  let identifierPath = nodePath.join(currentDir, templateIdentifier);
 
   let path = await select({
     message: "Where should the template files be saved?",
     options: [
       { value: defaultPath, label: defaultPath },
+      { value: identifierPath, label: identifierPath },
       { value: currentDir, label: currentDir },
       { value: "custom", label: "A custom path" },
     ],
@@ -127,9 +140,9 @@ function openEditor(path, edit) {
 
 async function runTemplateSelection(apiKey) {
   const workspaceId = await pickWorkspace(apiKey);
-  const templateId = await pickTemplate(workspaceId, apiKey);
+  const templateInfo = await pickTemplate(workspaceId, apiKey);
 
-  return templateId;
+  return templateInfo;
 }
 
 async function pickWorkspace(apiKey) {
@@ -193,5 +206,8 @@ async function pickTemplate(workspaceId, apiKey) {
 
   outro(`Using template: ${chalk.yellow(selectedTemplate.display_name)}`);
 
-  return selectedTemplate.id;
+  return {
+    id: selectedTemplate.id,
+    identifier: selectedTemplate.identifier,
+  };
 }
