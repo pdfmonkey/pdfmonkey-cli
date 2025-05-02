@@ -1,3 +1,5 @@
+import { cancel } from "@clack/prompts";
+
 // Gracefully shutdown the server when the user presses Ctrl-C
 //
 // @param {Function} callback - The callback to call when the user presses Ctrl-C
@@ -17,4 +19,12 @@ export function gracefullyShutdownUponCtrlC(callback) {
     callback();
     process.exit(0);
   });
+}
+
+// Cancel the operation and exit the program
+//
+// @returns {void}
+export function cancelOperation() {
+  cancel("Operation canceled");
+  process.exit(0);
 }

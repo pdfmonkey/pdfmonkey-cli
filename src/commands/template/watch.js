@@ -2,12 +2,12 @@ import chalk from "chalk";
 import open from "open";
 import { intro, outro } from "@clack/prompts";
 
-import { gracefullyShutdownUponCtrlC } from "../utils/term.js";
-import { getTemplate, updateTemplate, getTemplatePreviewUrl } from "../utils/pdfmonkey.js";
-import { handleConflicts } from "../utils/conflicts-handling.js";
-import { formatErrors } from "../utils/pdfmonkey.js";
-import { startWebServer } from "../utils/web-server.js";
-import { watchFiles } from "../utils/files-watching.js";
+import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
+import { getTemplate, updateTemplate, getTemplatePreviewUrl } from "../../utils/pdfmonkey.js";
+import { handleConflicts } from "../../utils/conflicts-handling.js";
+import { formatErrors } from "../../utils/pdfmonkey.js";
+import { startWebServer } from "../../utils/web-server.js";
+import { watchFiles } from "../../utils/files-watching.js";
 
 export default async function watchCommand(path, { apiKey, debug, openBrowser, port, livereloadPort, templateId }) {
   templateId ??= path.split("/").pop();

@@ -2,13 +2,12 @@
 
 import { program } from "commander";
 
-import initCommand from "../src/commands/init.js";
-import watchCommand from "../src/commands/watch.js";
+import { templateInitCommand, templateWatchCommand } from "../src/commands/template.js";
 import packageConfig from "../package.json" with { type: "json" };
 
 program
   .version(packageConfig.version)
-  .description("A CLI tool to edit your PDFMonkey template locally with your own code editor.");
+  .description("A CLI tool to edit your PDFMonkey templates locally with your own code editor.");
 
 function registerInitCommand(parent) {
   return parent
@@ -22,7 +21,7 @@ function registerInitCommand(parent) {
       "The API key to use (default: PDFMONKEY_API_KEY environment variable)",
       process.env.PDFMONKEY_API_KEY,
     )
-    .action(initCommand);
+    .action(templateInitCommand);
 }
 
 function registerWatchCommand(parent) {
@@ -48,7 +47,7 @@ function registerWatchCommand(parent) {
       process.env.LIVE_RELOAD_PORT || 2082,
     )
     .option("-t, --template-id <templateId>", "The ID of the template to use (default: current folder name)")
-    .action(watchCommand);
+    .action(templateWatchCommand);
 }
 
 const templateCommand = program.command("template").aliases(["tpl"]).description("Manage PDFMonkey templates");

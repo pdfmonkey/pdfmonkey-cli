@@ -1,4 +1,3 @@
-// import connect from "connect";
 import http from "http";
 import livereload from "livereload";
 import chalk from "chalk";

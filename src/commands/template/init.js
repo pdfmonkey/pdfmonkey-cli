@@ -1,14 +1,14 @@
 import chalk from "chalk";
+import shellescape from "shell-escape";
 import { exec } from "child_process";
 import nodePath from "path";
-import { confirm, intro, isCancel, cancel, log, outro, select, text } from "@clack/prompts";
+import { confirm, intro, isCancel, log, outro, select, text } from "@clack/prompts";
 import { existsSync, mkdirSync, readdirSync } from "fs";
 
-import { gracefullyShutdownUponCtrlC } from "../utils/term.js";
-import { getTemplate, getWorkspaces, getTemplates } from "../utils/pdfmonkey.js";
-import { writeTemplateContent } from "../utils/files.js";
-
-import shellescape from "shell-escape";
+import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
+import { getTemplate, getTemplates } from "../../utils/pdfmonkey.js";
+import { writeTemplateContent } from "../../utils/files.js";
+import { pickWorkspace } from "../shared/workspace.js";
 
 export default async function initCommand(templateId, path, { apiKey, edit }) {
   let templateIdentifier;
@@ -111,11 +111,6 @@ async function avoidConflicts(path) {
   }
 }
 
-function cancelOperation() {
-  cancel("Operation canceled");
-  process.exit(0);
-}
-
 function ensurePathPresent(path) {
   if (existsSync(path)) {
     return;
@@ -143,38 +138,6 @@ async function runTemplateSelection(apiKey) {
   const templateInfo = await pickTemplate(workspaceId, apiKey);
 
   return templateInfo;
-}
-
-async function pickWorkspace(apiKey) {
-  intro("Fetching workspaces...");
-
-  let selectedWorkspace;
-  const workspaces = await getWorkspaces(apiKey);
-
-  if (!workspaces || workspaces.length === 0) {
-    outro("No workspaces found");
-    cancelOperation();
-  }
-
-  if (workspaces.length === 1) {
-    selectedWorkspace = workspaces[0];
-  } else {
-    selectedWorkspace = await select({
-      message: "Select a workspace",
-      options: workspaces.map((workspace) => ({
-        value: workspace,
-        label: workspace.identifier,
-      })),
-    });
-  }
-
-  if (isCancel(selectedWorkspace)) {
-    cancelOperation();
-  }
-
-  outro(`Using workspace: ${chalk.yellow(selectedWorkspace.identifier)}`);
-
-  return selectedWorkspace.id;
 }
 
 async function pickTemplate(workspaceId, apiKey) {
