@@ -13,6 +13,16 @@ export function writeFile(path, filename, data) {
   fs.writeFileSync(`${path}/${filename}`, data ?? "", "utf-8");
 }
 
+/**
+ * Sanitize template identifier by replacing slashes with dashes
+ * Used to ensure template names with slashes don't create nested directories
+ * @param {string} identifier - The template identifier to sanitize
+ * @returns {string} The sanitized identifier
+ */
+export function sanitizeIdentifier(identifier) {
+  return identifier?.replace(/\//g, "-");
+}
+
 export function writeTemplateContent(template, path) {
   log.info("Writing template body");
   writeFile(path, "body.html.liquid", template.body_draft);

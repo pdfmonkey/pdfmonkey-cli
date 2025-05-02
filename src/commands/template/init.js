@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, readdirSync } from "fs";
 
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getTemplate, getTemplates } from "../../utils/pdfmonkey.js";
-import { writeTemplateContent } from "../../utils/files.js";
+import { writeTemplateContent, sanitizeIdentifier } from "../../utils/files.js";
 import { pickWorkspace } from "../shared/workspace.js";
 
 export default async function initCommand(templateId, path, { apiKey, edit }) {
@@ -29,7 +29,8 @@ export default async function initCommand(templateId, path, { apiKey, edit }) {
   }
 
   templateIdentifier ??= template.identifier;
-  path ??= await askForPath(templateId, templateIdentifier);
+
+  path ??= await askForPath(templateId, sanitizeIdentifier(templateIdentifier));
 
   ensurePathPresent(path);
   await avoidConflicts(path);
