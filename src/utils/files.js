@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import { log } from "@clack/prompts";
 
 export function fileUpdatedAt(path, filename) {
@@ -32,4 +33,12 @@ export function writeTemplateContent(template, path) {
 
   log.info("Writing template sample data");
   writeFile(path, "sample_data.json", template.sample_data_draft);
+}
+
+export function writeSnippetContent(snippet, filePath) {
+  const folder = path.dirname(filePath);
+  const filename = path.basename(filePath);
+
+  log.info(`Writing snippet code to ${filename}`);
+  writeFile(folder, filename, snippet.code);
 }

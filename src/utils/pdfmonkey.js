@@ -1,3 +1,4 @@
+import path from "path";
 import { log } from "@clack/prompts";
 import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
@@ -168,4 +169,81 @@ function buildTemplateCard(templateCard) {
     sanitized_identifier,
     sanitized_folder_identifier,
   };
+}
+
+// Fetch a single snippet from PDFMonkey
+//
+// @param {string} snippetId - The ID of the snippet to fetch
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<object>} The snippet
+export async function getSnippet(snippetId, apiKey) {
+  const url = `https://api.pdfmonkey.io/api/v1/snippets/${snippetId}`;
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const response = await fetch(url, { headers });
+  const json = await response.json();
+
+  if (json.errors) {
+    log.error(formatErrors(json.errors));
+    return null;
+  }
+
+  return buildSnippet(json.snippet);
+}
+
+// Fetch all snippets from PDFMonkey for a specific workspace
+//
+// @param {string} workspaceId - The ID of the workspace
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<array>} The snippets
+export async function getSnippets(workspaceId, apiKey) {
+  const url = `https://api.pdfmonkey.io/api/v1/snippets?page=all&q[workspace_id]=${workspaceId}`;
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const response = await fetch(url, { headers });
+  const json = await response.json();
+
+  if (json.errors) {
+    log.error(formatErrors(json.errors));
+    return null;
+  }
+
+  const snippets = json.snippets.map((snippet) => buildSnippet(snippet));
+
+  return snippets.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+}
+
+function buildSnippet(snippet) {
+  const sanitized_identifier = sanitizeIdentifier(snippet.identifier);
+
+  return {
+    ...snippet,
+    display_name: snippet.identifier,
+    sanitized_identifier,
+  };
+}
+
+// Update a snippet on PDFMonkey
+//
+// @param {string} snippetId - The ID of the snippet to update
+// @param {string} apiKey - The API key to use
+// @param {string} path - The path to the snippet file
+//
+// @returns {Promise<object>} The updated snippet
+export async function updateSnippet(snippetId, apiKey, filePath) {
+  const folder = path.dirname(filePath);
+  const filename = path.basename(filePath);
+  const code = readFile(folder, filename);
+
+  const url = `https://api.pdfmonkey.io/api/v1/snippets/${snippetId}`;
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const body = JSON.stringify({ code });
+  const response = await fetch(url, { method: "PATCH", headers, body });
+  const json = await response.json();
+
+  if (json.errors) {
+    return { success: false, errors: json.errors };
+  }
+
+  return { success: true, snippet: json.snippet };
 }

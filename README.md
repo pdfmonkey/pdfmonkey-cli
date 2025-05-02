@@ -49,6 +49,7 @@ pdfmonkey <resource> <command> [options]
 Currently supported resources:
 
 - `template` or `tpl`: Manage PDFMonkey templates
+- `snippet` or `snp`: Manage PDFMonkey snippets
 
 For example:
 
@@ -178,6 +179,55 @@ By default, the diff tool used is `diff -u` and the patch is displayed with the 
 
 ```bash
 DIFF=delta PAGER=delta pdfmonkey template watch
+```
+
+## Snippet Management
+
+### Init
+
+To start editing a PDFMonkey snippet, run the following command:
+
+```bash
+pdfmonkey snippet init
+```
+
+The command will help you select a workspace and find the snippet you want to edit.
+
+Alternatively, you can specify the snippet ID as a second argument.
+
+```bash
+pdfmonkey snippet init <snippet-id>
+```
+
+You will then be prompted to choose the destination for the snippet file. You can also specify the destination file as a second argument.
+
+```bash
+pdfmonkey snippet init <snippet-id> <destination-file>
+```
+
+> [!TIP]
+> **Open in Editor**
+>
+> You can also open the created file in your default editor using the `-e` or `--edit` option.
+>
+> ```bash
+> pdfmonkey snippet init <snippet-id> -e
+> ```
+
+### Watch
+
+To start watching a snippet file and sync the changes to PDFMonkey, run the following command:
+
+```bash
+pdfmonkey snippet watch <path>
+```
+
+This will start watching the file and sync automatically when changes are detected.
+
+If the file name is not the same as the snippet ID, you can specify the snippet ID using the `-s` option.
+
+```bash
+pdfmonkey snippet watch <path> -s <snippet-id>
 ```
 
 ## Configuration

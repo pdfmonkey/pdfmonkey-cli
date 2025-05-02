@@ -3,11 +3,14 @@
 import { program } from "commander";
 
 import { templateInitCommand, templateWatchCommand } from "../src/commands/template.js";
+import { snippetInitCommand, snippetWatchCommand } from "../src/commands/snippet.js";
 import packageConfig from "../package.json" with { type: "json" };
 
 program
   .version(packageConfig.version)
   .description("A CLI tool to edit your PDFMonkey templates locally with your own code editor.");
+
+const templateCommand = program.command("template").aliases(["tpl"]).description("Manage PDFMonkey templates");
 
 function registerInitCommand(parent) {
   return parent
@@ -50,12 +53,36 @@ function registerWatchCommand(parent) {
     .action(templateWatchCommand);
 }
 
-const templateCommand = program.command("template").aliases(["tpl"]).description("Manage PDFMonkey templates");
-
 registerInitCommand(templateCommand);
-registerWatchCommand(templateCommand);
-
 registerInitCommand(program);
+registerWatchCommand(templateCommand);
 registerWatchCommand(program);
+
+const snippetCommand = program.command("snippet").aliases(["snp"]).description("Manage PDFMonkey snippets");
+
+snippetCommand
+  .command("init")
+  .description("Initialize a PDFMonkey snippet file")
+  .argument("[snippetId]", "The ID of the snippet to use")
+  .argument("[path]", "The path to the snippet file (default: ID of the snippet in current folder)")
+  .option("-e, --edit", "Opens the snippet file in your default editor (based on EDITOR environment variable)")
+  .option(
+    "-k, --api-key <key>",
+    "The API key to use (default: PDFMONKEY_API_KEY environment variable)",
+    process.env.PDFMONKEY_API_KEY,
+  )
+  .action(snippetInitCommand);
+
+snippetCommand
+  .command("watch")
+  .description("Watch the current folder for changes and update the PDFMonkey snippet")
+  .argument("[path]", "The path to the snippet folder (default: current folder)", process.cwd())
+  .option(
+    "-k, --api-key <key>",
+    "The API key to use (default: PDFMONKEY_API_KEY environment variable)",
+    process.env.PDFMONKEY_API_KEY,
+  )
+  .option("-s, --snippet-id <snippetId>", "The ID of the snippet to use (default: current folder name)")
+  .action(snippetWatchCommand);
 
 program.parse(process.argv);
