@@ -6,20 +6,21 @@ import { confirm, intro, isCancel, log, outro, select, text } from "@clack/promp
 import { existsSync, mkdirSync, readdirSync } from "fs";
 
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { getTemplate, getTemplates } from "../../utils/pdfmonkey.js";
+import { getTemplate, getTemplateCard, getTemplateCards } from "../../utils/pdfmonkey.js";
 import { writeTemplateContent, sanitizeIdentifier } from "../../utils/files.js";
 import { pickWorkspace } from "../shared/workspace.js";
 
 export default async function initCommand(templateId, path, { apiKey, edit }) {
-  let templateIdentifier;
+  let templateCard = null;
 
-  if (!templateId) {
-    const { id, identifier } = await runTemplateSelection(apiKey);
-    templateId = id;
-    templateIdentifier = identifier;
+  if (templateId) {
+    templateCard = await getTemplateCard(templateId, apiKey);
+  } else {
+    templateCard = await runTemplateSelection(apiKey);
+    templateId = templateCard.id;
   }
 
-  intro(`Initializing template ${chalk.yellow(templateId)}`);
+  intro(`Initializing template ${chalk.yellow(templateCard.display_name)}`);
 
   gracefullyShutdownUponCtrlC(cancelOperation);
 
@@ -28,9 +29,12 @@ export default async function initCommand(templateId, path, { apiKey, edit }) {
     cancelOperation();
   }
 
-  templateIdentifier ??= template.identifier;
+  if (templateCard && templateCard.template_folder_identifier) {
+    template.template_folder_identifier = templateCard.template_folder_identifier;
+    template.sanitized_folder_identifier = sanitizeIdentifier(templateCard.template_folder_identifier);
+  }
 
-  path ??= await askForPath(templateId, sanitizeIdentifier(templateIdentifier));
+  path ??= await askForPath(templateCard);
 
   ensurePathPresent(path);
   await avoidConflicts(path);
@@ -67,19 +71,26 @@ function printWatchCommand(path, templateId) {
   log.info(`Watch your template using: ${shellescape(watchCommand)}`);
 }
 
-async function askForPath(templateId, templateIdentifier) {
+async function askForPath(templateCard) {
   let currentDir = process.cwd();
-  let defaultPath = nodePath.join(currentDir, templateId);
-  let identifierPath = nodePath.join(currentDir, templateIdentifier);
+  let defaultPath = nodePath.join(currentDir, templateCard.id);
+
+  const candidates = [defaultPath, nodePath.join(currentDir, templateCard.sanitized_identifier)];
+
+  if (templateCard.sanitized_folder_identifier) {
+    candidates.push(nodePath.join(currentDir, templateCard.sanitized_folder_identifier, templateCard.id));
+    candidates.push(
+      nodePath.join(currentDir, templateCard.sanitized_folder_identifier, templateCard.sanitized_identifier),
+    );
+  }
+
+  const pathOptions = candidates.filter(Boolean).map((candidate) => ({ value: candidate, label: candidate }));
+  pathOptions.push({ value: currentDir, label: currentDir });
+  pathOptions.push({ value: "custom", label: "A custom path" });
 
   let path = await select({
     message: "Where should the template files be saved?",
-    options: [
-      { value: defaultPath, label: defaultPath },
-      { value: identifierPath, label: identifierPath },
-      { value: currentDir, label: currentDir },
-      { value: "custom", label: "A custom path" },
-    ],
+    options: pathOptions,
   });
 
   if (path === "custom") {
@@ -145,7 +156,7 @@ async function pickTemplate(workspaceId, apiKey) {
   intro("Fetching templates...");
 
   let selectedTemplate;
-  const templates = await getTemplates(workspaceId, apiKey);
+  const templates = await getTemplateCards(workspaceId, apiKey);
 
   if (!templates || templates.length === 0) {
     outro("No templates found");
@@ -170,8 +181,5 @@ async function pickTemplate(workspaceId, apiKey) {
 
   outro(`Using template: ${chalk.yellow(selectedTemplate.display_name)}`);
 
-  return {
-    id: selectedTemplate.id,
-    identifier: selectedTemplate.identifier,
-  };
+  return selectedTemplate;
 }

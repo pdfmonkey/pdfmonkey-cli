@@ -1,5 +1,5 @@
 import { log } from "@clack/prompts";
-import { readFile } from "./files.js";
+import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
 
 function buildTemplateData(path) {
@@ -105,13 +105,33 @@ export async function getWorkspaces(apiKey) {
   return json.workspace_cards.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
 }
 
-// Fetch all templates from PDFMonkey for a specific workspace
+// Fetch a single template card from PDFMonkey
+//
+// @param {string} templateId - The ID of the template to fetch
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<object>} The template card
+export async function getTemplateCard(templateId, apiKey) {
+  const url = `https://api.pdfmonkey.io/api/v1/document_template_cards/${templateId}`;
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const response = await fetch(url, { headers });
+  const json = await response.json();
+
+  if (json.errors) {
+    log.error(formatErrors(json.errors));
+    return null;
+  }
+
+  return buildTemplateCard(json.document_template_card);
+}
+
+// Fetch all template cards from PDFMonkey for a specific workspace
 //
 // @param {string} workspaceId - The ID of the workspace
 // @param {string} apiKey - The API key to use
 //
 // @returns {Promise<array>} The templates
-export async function getTemplates(workspaceId, apiKey) {
+export async function getTemplateCards(workspaceId, apiKey) {
   const url = `https://api.pdfmonkey.io/api/v1/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
@@ -122,12 +142,7 @@ export async function getTemplates(workspaceId, apiKey) {
     return null;
   }
 
-  const templates = json.document_template_cards.map((template) => {
-    return {
-      ...template,
-      display_name: [template.template_folder_identifier, template.identifier].filter(Boolean).join(" / "),
-    };
-  });
+  const templates = json.document_template_cards.map((templateCard) => buildTemplateCard(templateCard));
 
   return templates.sort((a, b) => {
     const folderA = a.template_folder_identifier || "";
@@ -141,4 +156,16 @@ export async function getTemplates(workspaceId, apiKey) {
 
     return a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase());
   });
+}
+
+function buildTemplateCard(templateCard) {
+  const sanitized_identifier = sanitizeIdentifier(templateCard.identifier);
+  const sanitized_folder_identifier = sanitizeIdentifier(templateCard.template_folder_identifier);
+
+  return {
+    ...templateCard,
+    display_name: [templateCard.template_folder_identifier, templateCard.identifier].filter(Boolean).join(" / "),
+    sanitized_identifier,
+    sanitized_folder_identifier,
+  };
 }
