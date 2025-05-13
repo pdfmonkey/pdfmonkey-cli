@@ -91,7 +91,7 @@ Alternatively, you can specify the template ID as a second argument.
 pdfmonkey template init <template-id>
 ```
 
-You will then be prompted to choose the destination folder for the template files. You can also specify the destnation folder as a second argument.
+You will then be prompted to choose the destination folder for the template files. You can also specify the destination folder as a second argument.
 
 ```bash
 pdfmonkey template init <template-id> <destination-folder>
@@ -111,29 +111,22 @@ pdfmonkey template init <template-id> <destination-folder>
 To start watching a template folder and sync the changes to PDFMonkey, run the following command:
 
 ```bash
-pdfmonkey template watch -t <template-id>
+pdfmonkey template watch
 ```
 
-This will start watching files in **the current folder** and sync automatically.
+This will start watching files in **the current folder** and sync automatically. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the template.
 
-To monitor a different folder, simply pass the path as first argument:
+To monitor a different folder, simply pass the path as the first argument:
 
 ```bash
-pdfmonkey template watch <path> -t <template-id>
+pdfmonkey template watch <path>
 ```
 
-> [!TIP]
-> **Template ID and folder name**
->
-> If the watched template is named after the ID of the template, you can omit the `-t` option.
->
-> ```bash
-> pwd
-> /Users/pdfmonkey/templates/B1001CF2-53FC-4DC6-B51D-36B358743752
->
-> pdfmonkey template watch
-> # Watches the current folder and syncs the matching template
-> ```
+If for some reason the folder doesn't contain metadata or you want to use a different template ID, you can specify it using the `-t` option:
+
+```bash
+pdfmonkey template watch [path] -t <template-id>
+```
 
 ### Preview
 
@@ -221,15 +214,34 @@ The snippet will be stored in a folder structure similar to templates, with the 
 To start watching a snippet folder and sync the changes to PDFMonkey, run the following command:
 
 ```bash
+pdfmonkey snippet watch
+```
+
+This will start watching the `code.liquid` file in the **current folder** and sync automatically when changes are detected. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the snippet.
+
+To monitor a different folder, simply pass the path as the first argument:
+
+```bash
 pdfmonkey snippet watch <path>
 ```
 
-This will start watching the `code.liquid` file in the folder and sync automatically when changes are detected.
-
-If the folder name is not the same as the snippet ID, you can specify the snippet ID using the `-s` option.
+If for some reason the folder doesn't contain metadata or you want to use a different snippet ID, you can specify it using the `-s` option:
 
 ```bash
-pdfmonkey snippet watch <path> -s <snippet-id>
+pdfmonkey snippet watch [path] -s <snippet-id>
+```
+
+## Metadata
+
+The CLI stores metadata in a `.pdfmonkey.json` file within each resource folder. This file contains the resource type and ID, allowing commands to run without explicitly specifying IDs. This metadata is automatically created when initializing resources and used by the watch commands.
+
+The `.pdfmonkey.json` file looks like this:
+
+```json
+{
+  "type": "template",
+  "id": "123e4567-e89b-12d3-a456-426614174000"
+}
 ```
 
 ## Configuration

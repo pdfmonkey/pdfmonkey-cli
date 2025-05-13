@@ -2,6 +2,7 @@ import chalk from "chalk";
 import open from "open";
 import { intro, outro } from "@clack/prompts";
 
+import { getResourceId } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getTemplate, updateTemplate, getTemplatePreviewUrl } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
@@ -10,7 +11,7 @@ import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
 export default async function watchCommand(path, { apiKey, debug, openBrowser, port, livereloadPort, templateId }) {
-  templateId ??= path.split("/").pop();
+  templateId = getResourceId("template", templateId, path);
 
   intro(`Starting template sync for ${chalk.yellow(templateId)}`);
 

@@ -2,8 +2,8 @@ import { intro, isCancel, log, outro, select, text } from "@clack/prompts";
 import chalk from "chalk";
 import nodePath from "path";
 import shellescape from "shell-escape";
+import { avoidConflicts, ensurePathPresent, openEditor, writeMetadata } from "../../utils/files.js";
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { avoidConflicts, ensurePathPresent, openEditor } from "../../utils/files.js";
 
 export async function initResource(resourceInfo) {
   let path = resourceInfo.path;
@@ -21,6 +21,7 @@ export async function initResource(resourceInfo) {
 
   log.info("Writing resource");
   await write(resource, path);
+  writeMetadata(type, resource.id, path);
   log.info("Resource written");
   openEditor(path, edit);
 

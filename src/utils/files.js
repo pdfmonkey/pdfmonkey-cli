@@ -1,8 +1,11 @@
 import chalk from "chalk";
 import fs from "fs";
+import nodePath from "path";
 import { exec } from "child_process";
 import { confirm, isCancel, log } from "@clack/prompts";
 import { cancelOperation } from "./term.js";
+
+const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
 
 export async function avoidConflicts(path) {
   let files = fs.readdirSync(path);
@@ -36,6 +39,23 @@ export function fileUpdatedAt(path, filename) {
   return fs.statSync(`${path}/${filename}`).mtime;
 }
 
+export function getResourceId(type, resourceId, path) {
+  if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
+    const json = readFile(path, ".pdfmonkey.json");
+    const { id } = JSON.parse(json);
+    return id;
+  }
+
+  const id = resourceId ?? nodePath.basename(path);
+
+  // Only write metadata for proper UUIDs
+  if (id.match(UUID_PATTERN)) {
+    writeMetadata(type, resourceId, path);
+  }
+
+  return id;
+}
+
 export function openEditor(path, edit) {
   if (!edit) {
     return;
@@ -67,6 +87,15 @@ export function sanitizeIdentifier(identifier) {
   return identifier?.replace(/\//g, "-");
 }
 
+export function writeMetadata(type, id, path) {
+  writeFile(path, ".pdfmonkey.json", JSON.stringify({ type, id }, {}, 2));
+}
+
+export function writeSnippetContent(snippet, path) {
+  log.info("Writing snippet code");
+  writeFile(path, "code.liquid", snippet.code);
+}
+
 export function writeTemplateContent(template, path) {
   log.info("Writing template body");
   writeFile(path, "body.html.liquid", template.body_draft);
@@ -76,9 +105,4 @@ export function writeTemplateContent(template, path) {
 
   log.info("Writing template sample data");
   writeFile(path, "sample_data.json", template.sample_data_draft);
-}
-
-export function writeSnippetContent(snippet, path) {
-  log.info("Writing snippet code");
-  writeFile(path, "code.liquid", snippet.code);
 }
