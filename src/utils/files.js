@@ -1,9 +1,52 @@
+import chalk from "chalk";
 import fs from "fs";
-import path from "path";
-import { log } from "@clack/prompts";
+import { exec } from "child_process";
+import { confirm, isCancel, log } from "@clack/prompts";
+import { cancelOperation } from "./term.js";
+
+export async function avoidConflicts(path) {
+  let files = fs.readdirSync(path);
+
+  if (files.length == 0) {
+    return;
+  }
+
+  log.warn(`Files are already present in ${chalk.yellow(path)}.`);
+
+  let overwrite = await confirm({
+    message: "Are you sure you want to use this folder at the risk of losing data?",
+    initialValue: false,
+  });
+
+  if (!overwrite || isCancel(overwrite)) {
+    cancelOperation();
+  }
+}
+
+export function ensurePathPresent(path) {
+  if (fs.existsSync(path)) {
+    return;
+  }
+
+  log.info(`Creating folder ${chalk.yellow(path)}`);
+  fs.mkdirSync(path, { recursive: true });
+}
 
 export function fileUpdatedAt(path, filename) {
   return fs.statSync(`${path}/${filename}`).mtime;
+}
+
+export function openEditor(path, edit) {
+  if (!edit) {
+    return;
+  }
+
+  if (process.env.EDITOR) {
+    log.info(`Opening ${chalk.yellow(path)} in ${chalk.yellow(process.env.EDITOR)}`);
+    exec(`${process.env.EDITOR} "${path}"`);
+  } else {
+    log.error("No editor found. Please set the EDITOR environment variable to use this feature.");
+  }
 }
 
 export function readFile(path, filename) {
@@ -35,10 +78,7 @@ export function writeTemplateContent(template, path) {
   writeFile(path, "sample_data.json", template.sample_data_draft);
 }
 
-export function writeSnippetContent(snippet, filePath) {
-  const folder = path.dirname(filePath);
-  const filename = path.basename(filePath);
-
-  log.info(`Writing snippet code to ${filename}`);
-  writeFile(folder, filename, snippet.code);
+export function writeSnippetContent(snippet, path) {
+  log.info("Writing snippet code");
+  writeFile(path, "code.liquid", snippet.code);
 }

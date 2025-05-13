@@ -199,11 +199,13 @@ Alternatively, you can specify the snippet ID as a second argument.
 pdfmonkey snippet init <snippet-id>
 ```
 
-You will then be prompted to choose the destination for the snippet file. You can also specify the destination file as a second argument.
+You will then be prompted to choose the destination folder for the snippet. You can also specify the destination folder as a second argument.
 
 ```bash
-pdfmonkey snippet init <snippet-id> <destination-file>
+pdfmonkey snippet init <snippet-id> <destination-folder>
 ```
+
+The snippet will be stored in a folder structure similar to templates, with the code in a file named `code.liquid`.
 
 > [!TIP]
 > **Open in Editor**
@@ -216,15 +218,15 @@ pdfmonkey snippet init <snippet-id> <destination-file>
 
 ### Watch
 
-To start watching a snippet file and sync the changes to PDFMonkey, run the following command:
+To start watching a snippet folder and sync the changes to PDFMonkey, run the following command:
 
 ```bash
 pdfmonkey snippet watch <path>
 ```
 
-This will start watching the file and sync automatically when changes are detected.
+This will start watching the `code.liquid` file in the folder and sync automatically when changes are detected.
 
-If the file name is not the same as the snippet ID, you can specify the snippet ID using the `-s` option.
+If the folder name is not the same as the snippet ID, you can specify the snippet ID using the `-s` option.
 
 ```bash
 pdfmonkey snippet watch <path> -s <snippet-id>

@@ -4,7 +4,7 @@ import { intro, outro } from "@clack/prompts";
 
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getTemplate, updateTemplate, getTemplatePreviewUrl } from "../../utils/pdfmonkey.js";
-import { handleConflicts } from "../../utils/conflicts-handling.js";
+import { handleConflict } from "../../utils/conflicts-handling.js";
 import { formatErrors } from "../../utils/pdfmonkey.js";
 import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
@@ -53,4 +53,27 @@ export default async function watchCommand(path, { apiKey, debug, openBrowser, p
     liveReloadServer.close();
     server.close();
   });
+}
+
+export async function handleConflicts(template, path) {
+  const { body_draft, scss_style_draft, sample_data_draft } = template;
+  const updated_at = new Date(template.updated_at).toISOString();
+  let conflictHandled;
+
+  conflictHandled = await handleConflict(body_draft, updated_at, path, "body.html.liquid");
+  if (!conflictHandled) {
+    return false;
+  }
+
+  conflictHandled = await handleConflict(scss_style_draft, updated_at, path, "styles.scss");
+  if (!conflictHandled) {
+    return false;
+  }
+
+  conflictHandled = await handleConflict(sample_data_draft, updated_at, path, "sample_data.json");
+  if (!conflictHandled) {
+    return false;
+  }
+
+  return true;
 }

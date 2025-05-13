@@ -1,7 +1,8 @@
-import path from "path";
 import { log } from "@clack/prompts";
 import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
+
+const baseUrl = "https://api.pdfmonkey.io/api/v1";
 
 function buildTemplateData(path) {
   const body_draft = readFile(path, "body.html.liquid");
@@ -18,7 +19,7 @@ function buildTemplateData(path) {
 //
 // @returns {Promise<object>} The template
 export async function getTemplate(templateId, apiKey) {
-  const url = `https://api.pdfmonkey.io/api/v1/document_templates/${templateId}`;
+  const url = `${baseUrl}/document_templates/${templateId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -32,7 +33,7 @@ export async function getTemplate(templateId, apiKey) {
 }
 
 export async function getTemplateDebugUrl(templateId, apiKey) {
-  let url = `https://api.pdfmonkey.io/api/v1/document_template_debugs/${templateId}`;
+  let url = `${baseUrl}/document_template_debugs/${templateId}`;
   let headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   let response = await fetch(url, { headers });
   let json = await response.json();
@@ -75,7 +76,7 @@ export function formatErrors(errors) {
 export async function updateTemplate(templateId, apiKey, path) {
   const templateData = buildTemplateData(path);
 
-  const url = `https://api.pdfmonkey.io/api/v1/document_templates/${templateId}`;
+  const url = `${baseUrl}/document_templates/${templateId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { method: "PATCH", headers, body: templateData });
   const json = await response.json();
@@ -93,7 +94,7 @@ export async function updateTemplate(templateId, apiKey, path) {
 //
 // @returns {Promise<array>} The workspaces
 export async function getWorkspaces(apiKey) {
-  const url = "https://api.pdfmonkey.io/api/v1/workspace_cards";
+  const url = `${baseUrl}/workspace_cards`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -113,7 +114,7 @@ export async function getWorkspaces(apiKey) {
 //
 // @returns {Promise<object>} The template card
 export async function getTemplateCard(templateId, apiKey) {
-  const url = `https://api.pdfmonkey.io/api/v1/document_template_cards/${templateId}`;
+  const url = `${baseUrl}/document_template_cards/${templateId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -133,7 +134,7 @@ export async function getTemplateCard(templateId, apiKey) {
 //
 // @returns {Promise<array>} The templates
 export async function getTemplateCards(workspaceId, apiKey) {
-  const url = `https://api.pdfmonkey.io/api/v1/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
+  const url = `${baseUrl}/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -178,7 +179,7 @@ function buildTemplateCard(templateCard) {
 //
 // @returns {Promise<object>} The snippet
 export async function getSnippet(snippetId, apiKey) {
-  const url = `https://api.pdfmonkey.io/api/v1/snippets/${snippetId}`;
+  const url = `${baseUrl}/snippets/${snippetId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -198,7 +199,7 @@ export async function getSnippet(snippetId, apiKey) {
 //
 // @returns {Promise<array>} The snippets
 export async function getSnippets(workspaceId, apiKey) {
-  const url = `https://api.pdfmonkey.io/api/v1/snippets?page=all&q[workspace_id]=${workspaceId}`;
+  const url = `${baseUrl}/snippets?page=all&q[workspace_id]=${workspaceId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const response = await fetch(url, { headers });
   const json = await response.json();
@@ -227,15 +228,13 @@ function buildSnippet(snippet) {
 //
 // @param {string} snippetId - The ID of the snippet to update
 // @param {string} apiKey - The API key to use
-// @param {string} path - The path to the snippet file
+// @param {string} path - The path to the snippet folder
 //
 // @returns {Promise<object>} The updated snippet
-export async function updateSnippet(snippetId, apiKey, filePath) {
-  const folder = path.dirname(filePath);
-  const filename = path.basename(filePath);
-  const code = readFile(folder, filename);
+export async function updateSnippet(snippetId, apiKey, path) {
+  const code = readFile(path, "code.liquid");
 
-  const url = `https://api.pdfmonkey.io/api/v1/snippets/${snippetId}`;
+  const url = `${baseUrl}/snippets/${snippetId}`;
   const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
   const body = JSON.stringify({ code });
   const response = await fetch(url, { method: "PATCH", headers, body });
