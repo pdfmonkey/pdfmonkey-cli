@@ -4,6 +4,14 @@ import { attributeNames } from "./constants.js";
 
 const baseUrl = "https://api.pdfmonkey.io/api/v1";
 
+function buildHeaders(apiKey) {
+  return {
+    Authorization: `Bearer ${apiKey}`,
+    "Content-Type": "application/json",
+    "User-Agent": "PDFMonkey CLI",
+  };
+}
+
 function buildTemplateData(path) {
   const body_draft = readFile(path, "body.html.liquid");
   const scss_style_draft = readFile(path, "styles.scss");
@@ -20,7 +28,7 @@ function buildTemplateData(path) {
 // @returns {Promise<object>} The template
 export async function getTemplate(templateId, apiKey) {
   const url = `${baseUrl}/document_templates/${templateId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -34,7 +42,7 @@ export async function getTemplate(templateId, apiKey) {
 
 export async function getTemplateDebugUrl(templateId, apiKey) {
   let url = `${baseUrl}/document_template_debugs/${templateId}`;
-  let headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  let headers = buildHeaders(apiKey);
   let response = await fetch(url, { headers });
   let json = await response.json();
 
@@ -77,7 +85,7 @@ export async function updateTemplate(templateId, apiKey, path) {
   const templateData = buildTemplateData(path);
 
   const url = `${baseUrl}/document_templates/${templateId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { method: "PATCH", headers, body: templateData });
   const json = await response.json();
 
@@ -95,7 +103,7 @@ export async function updateTemplate(templateId, apiKey, path) {
 // @returns {Promise<array>} The workspaces
 export async function getWorkspaces(apiKey) {
   const url = `${baseUrl}/workspace_cards`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -115,7 +123,7 @@ export async function getWorkspaces(apiKey) {
 // @returns {Promise<object>} The template card
 export async function getTemplateCard(templateId, apiKey) {
   const url = `${baseUrl}/document_template_cards/${templateId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -135,7 +143,7 @@ export async function getTemplateCard(templateId, apiKey) {
 // @returns {Promise<array>} The templates
 export async function getTemplateCards(workspaceId, apiKey) {
   const url = `${baseUrl}/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -180,7 +188,7 @@ function buildTemplateCard(templateCard) {
 // @returns {Promise<object>} The snippet
 export async function getSnippet(snippetId, apiKey) {
   const url = `${baseUrl}/snippets/${snippetId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -200,7 +208,7 @@ export async function getSnippet(snippetId, apiKey) {
 // @returns {Promise<array>} The snippets
 export async function getSnippets(workspaceId, apiKey) {
   const url = `${baseUrl}/snippets?page=all&q[workspace_id]=${workspaceId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const response = await fetch(url, { headers });
   const json = await response.json();
 
@@ -235,7 +243,7 @@ export async function updateSnippet(snippetId, apiKey, path) {
   const code = readFile(path, "code.liquid");
 
   const url = `${baseUrl}/snippets/${snippetId}`;
-  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const headers = buildHeaders(apiKey);
   const body = JSON.stringify({ code });
   const response = await fetch(url, { method: "PATCH", headers, body });
   const json = await response.json();
