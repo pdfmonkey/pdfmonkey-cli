@@ -1,3 +1,4 @@
+// Mapping of API attribute names to their human-readable display names.
 export const attributeNames = {
   body_draft: "HTML",
   code: "Code",
@@ -6,6 +7,7 @@ export const attributeNames = {
   settings_draft: "Settings",
 };
 
+// Mapping of file names to their corresponding human-readable attribute names.
 export const fileToAttributeName = {
   "body.html.liquid": "HTML",
   "code.liquid": "Code",

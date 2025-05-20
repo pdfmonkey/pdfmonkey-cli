@@ -3,6 +3,15 @@ import livereload from "livereload";
 import chalk from "chalk";
 import { log } from "@clack/prompts";
 
+// Starts a web server for template preview with live reload capabilities.
+//
+// @param {number} port - The port to run the preview server on
+// @param {number} liveReloadPort - The port to run the live reload server on
+// @param {object} dataCallbacks - Object containing callback functions that provide dynamic data
+// @param {Function} dataCallbacks.templateId - Function that returns the current template ID
+// @param {Function} dataCallbacks.previewUrl - Function that returns the current preview URL
+//
+// @returns {object} Object containing the HTTP server and live reload server instances
 export function startWebServer(port, liveReloadPort, dataCallbacks) {
   const server = http.createServer();
 

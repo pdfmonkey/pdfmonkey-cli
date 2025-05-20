@@ -7,6 +7,11 @@ import { cancelOperation } from "./term.js";
 
 const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
 
+// Checks if there are already files in the specified path and asks for confirmation to overwrite.
+//
+// @param {string} path - Directory path to check
+//
+// @returns {Promise<void>}
 export async function avoidConflicts(path) {
   let files = fs.readdirSync(path);
 
@@ -26,6 +31,11 @@ export async function avoidConflicts(path) {
   }
 }
 
+// Creates a directory if it doesn't exist.
+//
+// @param {string} path - Directory path to ensure exists
+//
+// @returns {void}
 export function ensurePathPresent(path) {
   if (fs.existsSync(path)) {
     return;
@@ -35,10 +45,21 @@ export function ensurePathPresent(path) {
   fs.mkdirSync(path, { recursive: true });
 }
 
+// Gets the last modification time of a file.
+//
+// @param {string} path - Directory containing the file
+// @param {string} filename - Name of the file
+//
+// @returns {Date} The last modification time
 export function fileUpdatedAt(path, filename) {
   return fs.statSync(`${path}/${filename}`).mtime;
 }
 
+// Retrieves resource metadata from the .pdfmonkey.json file.
+//
+// @param {string} path - Path to the resource directory
+//
+// @returns {object|null} The resource metadata or null if not found/invalid
 export function getResourceMetadata(path) {
   try {
     if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
@@ -57,6 +78,13 @@ export function getResourceMetadata(path) {
   return null;
 }
 
+// Gets the resource ID from the .pdfmonkey.json file or from parameters.
+//
+// @param {string} type - The resource type (template, snippet)
+// @param {string} resourceId - Optional explicit resource ID
+// @param {string} path - Directory path to the resource
+//
+// @returns {string} The resource ID
 export function getResourceId(type, resourceId, path) {
   if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
     const json = readFile(path, ".pdfmonkey.json");
@@ -74,6 +102,12 @@ export function getResourceId(type, resourceId, path) {
   return id;
 }
 
+// Opens the specified path in the user's preferred editor.
+//
+// @param {string} path - Path to the file or directory to open
+// @param {boolean} edit - Whether to open the editor
+//
+// @returns {void}
 export function openEditor(path, edit) {
   if (!edit) {
     return;
@@ -87,33 +121,64 @@ export function openEditor(path, edit) {
   }
 }
 
+// Reads the contents of a file.
+//
+// @param {string} path - Directory containing the file
+// @param {string} filename - Name of the file to read
+//
+// @returns {string} The file contents
 export function readFile(path, filename) {
   return fs.readFileSync(`${path}/${filename}`, "utf-8");
 }
 
+// Writes data to a file.
+//
+// @param {string} path - Directory where the file should be written
+// @param {string} filename - Name of the file to write
+// @param {string} data - Content to write to the file
+//
+// @returns {void}
 export function writeFile(path, filename, data) {
   fs.writeFileSync(`${path}/${filename}`, data ?? "", "utf-8");
 }
 
-/**
- * Sanitize template identifier by replacing slashes with dashes
- * Used to ensure template names with slashes don't create nested directories
- * @param {string} identifier - The template identifier to sanitize
- * @returns {string} The sanitized identifier
- */
+// Sanitizes template identifier by replacing slashes with dashes.
+//
+// @param {string} identifier - The template identifier to sanitize
+//
+// @returns {string} The sanitized identifier
 export function sanitizeIdentifier(identifier) {
   return identifier?.replace(/\//g, "-");
 }
 
+// Writes resource metadata to the .pdfmonkey.json file.
+//
+// @param {string} type - The resource type (template, snippet)
+// @param {string} id - The resource ID
+// @param {string} path - Directory path where metadata should be written
+//
+// @returns {void}
 export function writeMetadata(type, id, path) {
   writeFile(path, ".pdfmonkey.json", JSON.stringify({ type, id }, {}, 2));
 }
 
+// Writes snippet content to the code.liquid file.
+//
+// @param {object} snippet - The snippet object containing code
+// @param {string} path - Directory path where the snippet should be written
+//
+// @returns {void}
 export function writeSnippetContent(snippet, path) {
   log.info("Writing snippet code");
   writeFile(path, "code.liquid", snippet.code);
 }
 
+// Writes template content to the appropriate files.
+//
+// @param {object} template - The template object containing body, styles, and sample data
+// @param {string} path - Directory path where the template files should be written
+//
+// @returns {void}
 export function writeTemplateContent(template, path) {
   log.info("Writing template body");
   writeFile(path, "body.html.liquid", template.body_draft);

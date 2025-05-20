@@ -2,6 +2,12 @@ import chalk from "chalk";
 import chokidar from "chokidar";
 import { spinner } from "@clack/prompts";
 
+// Watches files in a directory and executes a callback on changes.
+//
+// @param {string} path - The path to watch for file changes
+// @param {Function} callback - Function to execute when a file changes, must return an object with success property
+//
+// @returns {void}
 export function watchFiles(path, callback) {
   chokidar.watch(path, { ignoreInitial: true }).on("all", async (event, filePath) => {
     let message = `Updated: ${filePath.split("/").pop()}`;

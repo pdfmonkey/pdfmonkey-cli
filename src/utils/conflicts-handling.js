@@ -6,6 +6,14 @@ import { isCancel, log, select } from "@clack/prompts";
 import { fileUpdatedAt, readFile, writeFile } from "./files.js";
 import { fileToAttributeName } from "./constants.js";
 
+// Handles conflicts between local and remote versions of a file.
+//
+// @param {string} remoteData - The content of the remote version
+// @param {string} remoteUpdatedAt - When the remote version was last updated (ISO format)
+// @param {string} path - The path to the local file directory
+// @param {string} filename - The name of the file in conflict
+//
+// @returns {Promise<boolean>} True if conflict was resolved, false if operation was cancelled
 export async function handleConflict(remoteData, remoteUpdatedAt, path, filename) {
   const localData = readFile(path, filename);
   const localUpdatedAt = fileUpdatedAt(path, filename);
@@ -53,6 +61,14 @@ export async function handleConflict(remoteData, remoteUpdatedAt, path, filename
   }
 }
 
+// Shows differences between local file and remote content using system diff tools.
+//
+// @param {string} path - The directory path where the local file is located
+// @param {string} filename - The name of the file to compare
+// @param {string} remoteContent - The content from the remote version to compare against
+//
+// @returns {void}
+// @private
 function showDiff(path, filename, remoteContent) {
   const diffTool = process.env.DIFF ?? "diff -u";
   const pager = process.env.PAGER ?? "less";
