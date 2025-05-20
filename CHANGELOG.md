@@ -2,9 +2,12 @@
 
 ## Unpublished
 
-- Adding template name as local folder name candidate
+- Adding support for multi-resources watch
+- Adding metadata file support
+- Adding snippets management
 - Adding _resource-based_ commands (e.g. `pdfmonkey template watch`)
-- Making `init` ask for workspace and template if none is provided
+- Adding template name as local folder name candidate
+- Making `init` ask for workspace and template if none provided
 
 ## 1.0.2 (2025-01-24)
 
