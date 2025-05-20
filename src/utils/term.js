@@ -14,9 +14,9 @@ import { cancel } from "@clack/prompts";
 //
 // @returns {void}
 export function gracefullyShutdownUponCtrlC(callback) {
-  process.on("SIGINT", () => {
+  process.on("SIGINT", async () => {
     process.stdout.write("\r   \r");
-    callback();
+    await callback();
     process.exit(0);
   });
 }

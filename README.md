@@ -231,6 +231,30 @@ If for some reason the folder doesn't contain metadata or you want to use a diff
 pdfmonkey snippet watch [path] -s <snippet-id>
 ```
 
+## Watch Multiple Resources
+
+The CLI allows you to watch multiple resources (one templates and multiple snippets) simultaneously with a single command:
+
+```bash
+pdfmonkey watch
+```
+
+This will prompt you to interactively select the folders you want to watch.
+
+You can also directly specify multiple paths:
+
+```bash
+pdfmonkey watch path/to/template path/to/snippet
+```
+
+When watching multiple resources, the command will automatically detect if each folder contains a template or a snippet based on the metadata. Note that **only one template can be watched at a time**, but you can watch multiple snippets alongside it.
+
+This combined watch command supports the same options as the `template watch` command:
+
+```bash
+pdfmonkey watch -D -o -p 2083 -l 2084
+```
+
 ## Metadata
 
 The CLI stores metadata in a `.pdfmonkey.json` file within each resource folder. This file contains the resource type and ID, allowing commands to run without explicitly specifying IDs. This metadata is automatically created when initializing resources and used by the watch commands.

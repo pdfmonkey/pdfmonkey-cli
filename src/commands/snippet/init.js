@@ -9,7 +9,7 @@ import { initResource } from "../shared/init.js";
 import { pickWorkspace } from "../shared/workspace.js";
 
 export default async function initCommand(snippetId, path, { apiKey, edit }) {
-  initResource({
+  return await initResource({
     id: snippetId,
     type: "snippet",
     path,
@@ -18,7 +18,6 @@ export default async function initCommand(snippetId, path, { apiKey, edit }) {
     fetch: () => fetchSnippet(snippetId, apiKey),
     pathCandidates,
     write: writeSnippetContent,
-    watchCommand,
   });
 }
 
@@ -75,22 +74,4 @@ async function runSnippetSelection(apiKey) {
   const snippetInfo = await pickSnippet(workspaceId, apiKey);
 
   return snippetInfo;
-}
-
-function watchCommand(path, snippetId) {
-  let watchCommand;
-  const watchCommandBase = ["pdfmonkey", "snippet", "watch"];
-  const snippetFolder = nodePath.basename(path);
-
-  if (path === process.cwd() && snippetFolder === snippetId) {
-    watchCommand = watchCommandBase;
-  } else if (path === process.cwd()) {
-    watchCommand = [...watchCommandBase, "-s", snippetId];
-  } else if (snippetFolder === snippetId) {
-    watchCommand = [...watchCommandBase, path];
-  } else {
-    watchCommand = [...watchCommandBase, path, "-s", snippetId];
-  }
-
-  return watchCommand;
 }

@@ -7,7 +7,7 @@ import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.j
 
 export async function initResource(resourceInfo) {
   let path = resourceInfo.path;
-  const { type, fetch, displayName, write, edit, watchCommand, pathCandidates } = resourceInfo;
+  const { type, fetch, displayName, write, edit, pathCandidates } = resourceInfo;
   const resource = await fetch();
 
   intro(`Initializing ${type} ${chalk.yellow(displayName(resource))}`);
@@ -27,7 +27,7 @@ export async function initResource(resourceInfo) {
 
   log.success(`Your ${type} has been initialized!`);
 
-  printWatchCommand(watchCommand(path, resource.id));
+  printWatchCommand(type, path);
 
   outro("Bye!");
 }
@@ -57,10 +57,12 @@ async function askForPath(resource, pathCandidates) {
   return path;
 }
 
-function printWatchCommand(watchCommand) {
+function printWatchCommand(type, path) {
+  let watchCommand = ["pdfmonkey", "watch", path];
+
   if (!process.env.PDFMONKEY_API_KEY) {
     watchCommand = [...watchCommand, "-k", "YOUR_API_KEY"];
   }
 
-  log.info(`Watch your snippet using: ${shellescape(watchCommand)}`);
+  log.info(`Watch your ${type} using: ${shellescape(watchCommand)}`);
 }

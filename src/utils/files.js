@@ -39,6 +39,24 @@ export function fileUpdatedAt(path, filename) {
   return fs.statSync(`${path}/${filename}`).mtime;
 }
 
+export function getResourceMetadata(path) {
+  try {
+    if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
+      const metadata = JSON.parse(readFile(path, ".pdfmonkey.json"));
+
+      if (metadata && metadata.type && metadata.id) {
+        return metadata;
+      }
+    }
+  } catch (error) {
+    log.error(`Error parsing metadata for ${chalk.yellow(path)}: ${error.message}`);
+    return null;
+  }
+
+  log.error(`No proper metadata found for ${chalk.yellow(path)}`);
+  return null;
+}
+
 export function getResourceId(type, resourceId, path) {
   if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
     const json = readFile(path, ".pdfmonkey.json");

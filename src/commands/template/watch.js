@@ -1,6 +1,6 @@
 import chalk from "chalk";
 import open from "open";
-import { intro, outro } from "@clack/prompts";
+import { intro, outro, log } from "@clack/prompts";
 
 import { getResourceId } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
@@ -10,10 +10,14 @@ import { formatErrors } from "../../utils/pdfmonkey.js";
 import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
-export default async function watchCommand(path, { apiKey, debug, openBrowser, port, livereloadPort, templateId }) {
+export default async function watchCommand(
+  path,
+  { apiKey, debug, openBrowser, port, livereloadPort, templateId, wrapped = false },
+) {
   templateId = getResourceId("template", templateId, path);
 
-  intro(`Starting template sync for ${chalk.yellow(templateId)}`);
+  const introMessage = `Starting template sync for ${chalk.yellow(templateId)}`;
+  wrapped ? log.info(introMessage) : intro(introMessage);
 
   let template = await getTemplate(templateId, apiKey);
   if (!template) {
@@ -21,13 +25,17 @@ export default async function watchCommand(path, { apiKey, debug, openBrowser, p
   }
 
   if (!(await handleConflicts(template, path))) {
-    outro("Shutting down");
-    process.exit(0);
+    if (wrapped) {
+      return;
+    } else {
+      outro("Shutting down");
+      process.exit(0);
+    }
   }
 
   let previewUrl = await getTemplatePreviewUrl(template, apiKey, debug);
 
-  const { server, liveReloadServer } = startWebServer(port, livereloadPort, {
+  const { server, liveReloadServer } = await startWebServer(port, livereloadPort, {
     templateId: () => template.id,
     previewUrl: () => previewUrl,
   });
@@ -49,11 +57,25 @@ export default async function watchCommand(path, { apiKey, debug, openBrowser, p
     open(`http://localhost:${port}`);
   }
 
-  gracefullyShutdownUponCtrlC(() => {
-    outro("Shutting down");
+  const shutdownHandler = () => {
     liveReloadServer.close();
     server.close();
-  });
+  };
+
+  if (wrapped) {
+    return {
+      shutdownHandler: () => {
+        log.info("Shutting down template watcher");
+        shutdownHandler();
+      },
+      liveReloadServer,
+    };
+  } else {
+    gracefullyShutdownUponCtrlC(() => {
+      outro("Shutting down");
+      shutdownHandler();
+    });
+  }
 }
 
 export async function handleConflicts(template, path) {
