@@ -3,7 +3,7 @@ name: Release Package
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 jobs:
@@ -23,9 +23,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 22
-          cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
+          cache: "npm"
+          registry-url: "https://registry.npmjs.org"
           always-auth: true
+
+      - name: Extract tag info
+        id: tag
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#v}
+          if [[ "$VERSION" == *"-rc."* ]]; then
+            echo "NPM_TAG=next" >> $GITHUB_OUTPUT
+          else
+            echo "NPM_TAG=latest" >> $GITHUB_OUTPUT
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
         run: npm ci
@@ -33,4 +46,8 @@ jobs:
       - name: Publish to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --tag ${{ steps.tag.outputs.NPM_TAG }}
+
+      - name: Log publish details
+        run: |
+          echo "Published version ${{ steps.tag.outputs.VERSION }} with tag ${{ steps.tag.outputs.NPM_TAG }}"
