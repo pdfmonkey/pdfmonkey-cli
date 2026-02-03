@@ -1,6 +1,6 @@
 # Changelog
 
-## HEAD
+## 1.1.0 (2026-02-03)
 
 - Adding base URL configuration from ENV
 
