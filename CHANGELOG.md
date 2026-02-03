@@ -1,5 +1,9 @@
 # Changelog
 
+## HEAD
+
+- Adding base URL configuration from ENV
+
 ## 1.1.0-rc.0 (2025-05-20)
 
 - Adding support for multi-resources watch

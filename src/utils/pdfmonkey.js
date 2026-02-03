@@ -2,7 +2,7 @@ import { log } from "@clack/prompts";
 import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
 
-const baseUrl = "https://api.pdfmonkey.io/api/v1";
+const baseUrl = process.env.PDFMONKEY_API_BASE ?? "https://api.pdfmonkey.io/api/v1";
 
 // Builds authorization headers for API requests.
 //
