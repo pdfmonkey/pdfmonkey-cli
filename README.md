@@ -4,6 +4,8 @@
 
 This CLI tool is a great solution for developers who want to author [PDFMonkey](https://pdfmonkey.io) templates using their own code editor and local development environment.
 
+It also lets you manage your workspaces, templates, folders, snippets and documents from the terminal, from scripts or from an AI agent.
+
 ## Installation
 
 The PDFMonkey CLI requires Node.js 22.12 or later and can be installed using npm.
@@ -48,6 +50,7 @@ pdfmonkey <resource> <command> [options]
 
 Currently supported resources:
 
+- `workspace` or `ws`: List PDFMonkey workspaces
 - `template` or `tpl`: Manage PDFMonkey templates
 - `snippet` or `snp`: Manage PDFMonkey snippets
 
@@ -254,6 +257,24 @@ This combined watch command supports the same options as the `template watch` co
 ```bash
 pdfmonkey watch -D -o -p 2083 -l 2084
 ```
+
+## Managing resources
+
+Besides local edition, the CLI covers the everyday operations on your PDFMonkey resources. Every command has a `--help` option listing all its options.
+
+### Workspaces
+
+```bash
+pdfmonkey whoami          # Check which account the API key belongs to
+pdfmonkey workspace list
+```
+
+## Scripting and AI agents
+
+The CLI is designed to be used by scripts and LLM-based agents as well as humans:
+
+- Every command accepts `--json` to output raw JSON, e.g. `pdfmonkey workspace list --json | jq '.[].id'`.
+- Errors are printed on the standard error output and the process exits with a non-zero code.
 
 ## Metadata
 

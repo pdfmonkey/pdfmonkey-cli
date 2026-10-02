@@ -5,11 +5,14 @@ import { program } from "commander";
 import { templateInitCommand, templateWatchCommand } from "../src/commands/template.js";
 import { snippetInitCommand, snippetWatchCommand } from "../src/commands/snippet.js";
 import { resourcesInitCommand, resourcesWatchCommand } from "../src/commands/resources.js";
+import { whoamiCommand, workspaceListCommand } from "../src/commands/account.js";
 import { run } from "../src/utils/cli.js";
 import packageConfig from "../package.json" with { type: "json" };
 
 // No default value here: commander would print the API key in the help output
 const authArgs = ["-k, --api-key <key>", "The API key to use (default: PDFMONKEY_API_KEY environment variable)"];
+
+const jsonArgs = ["--json", "Output raw JSON (handy for scripts and LLMs)"];
 
 const portArgs = [
   "-p, --port <port>",
@@ -24,11 +27,12 @@ const livereloadPortArgs = [
 ];
 
 program
+  .name("pdfmonkey")
   .version(packageConfig.version)
-  .description("A CLI tool to edit your PDFMonkey templates locally with your own code editor.");
+  .description("A CLI tool to manage your PDFMonkey templates, snippets and documents.");
 
 ////////////////////////////////////////////////////////////////////////////////
-// Global commands                                                          //
+// Global commands                                                            //
 ////////////////////////////////////////////////////////////////////////////////
 
 program
@@ -48,6 +52,27 @@ program
   .option(...livereloadPortArgs)
   .option(...authArgs)
   .action(run(resourcesWatchCommand));
+
+program
+  .command("whoami")
+  .description("Show the account the API key belongs to")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(whoamiCommand));
+
+////////////////////////////////////////////////////////////////////////////////
+// Workspace commands                                                         //
+////////////////////////////////////////////////////////////////////////////////
+
+const workspaceCommand = program.command("workspace").aliases(["ws"]).description("Manage PDFMonkey workspaces");
+
+workspaceCommand
+  .command("list")
+  .alias("ls")
+  .description("List workspaces")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(workspaceListCommand));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Template commands                                                          //
