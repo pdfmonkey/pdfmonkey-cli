@@ -96,7 +96,7 @@ export function getResourceId(type, resourceId, path) {
 
   // Only write metadata for proper UUIDs
   if (id.match(UUID_PATTERN)) {
-    writeMetadata(type, resourceId, path);
+    writeMetadata(type, id, path);
   }
 
   return id;

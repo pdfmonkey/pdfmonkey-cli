@@ -5,7 +5,6 @@ import { getResourceId } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getSnippet, updateSnippet } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
-import { formatErrors } from "../../utils/pdfmonkey.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
 export default async function watchCommand(
@@ -39,8 +38,6 @@ export default async function watchCommand(
         templateLiveReloadServer.refresh("/");
         log.info("Template preview refreshed");
       }
-    } else {
-      update.errors = formatErrors(update.errors);
     }
 
     return update;
