@@ -1,33 +1,81 @@
 import { log } from "@clack/prompts";
+import { APIError, PDFMonkey } from "pdfmonkey";
 import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
+import packageConfig from "../../package.json" with { type: "json" };
 
-const baseUrl = process.env.PDFMONKEY_API_BASE ?? "https://api.pdfmonkey.io/api/v1";
+const userAgent = `PDFMonkey CLI/${packageConfig.version}`;
+let client;
 
-// Builds authorization headers for API requests.
+// Returns the (memoized) PDFMonkey SDK client.
 //
-// @param {string} apiKey - The API key to use for authorization
+// @param {string} [apiKey] - The API key to use (default: PDFMONKEY_API_KEY environment variable)
 //
-// @returns {object} Object containing the headers
-function buildHeaders(apiKey) {
-  return {
-    Authorization: `Bearer ${apiKey}`,
-    "Content-Type": "application/json",
-    "User-Agent": "PDFMonkey CLI",
-  };
+// @returns {PDFMonkey} The client
+export function getClient(apiKey) {
+  client ??= new PDFMonkey({
+    apiKey,
+    baseURL: process.env.PDFMONKEY_API_BASE,
+    // The SDK sets its own User-Agent, we want the CLI to be identifiable
+    fetch: (url, init) => fetch(url, { ...init, headers: { ...init?.headers, "User-Agent": userAgent } }),
+  });
+
+  return client;
 }
 
-// Builds template data from local files.
+// Formats error objects into readable strings.
 //
-// @param {string} path - Path to the template directory
+// @param {object|array} errors - Error object or array from API
 //
-// @returns {string} JSON string containing template data
-function buildTemplateData(path) {
-  const body_draft = readFile(path, "body.html.liquid");
-  const scss_style_draft = readFile(path, "styles.scss");
-  const sample_data_draft = readFile(path, "sample_data.json");
+// @returns {string} Formatted error message
+export function formatErrors(errors) {
+  if (Array.isArray(errors)) {
+    return errors.map((error) => `${error.status} ${error.title} — ${error.detail}`).join("\n");
+  }
 
-  return JSON.stringify({ body_draft, scss_style_draft, sample_data_draft });
+  return Object.entries(errors)
+    .flatMap(([key, errorMessages]) => errorMessages.map((message) => `${attributeNames[key] ?? key}: ${message}`))
+    .join("\n");
+}
+
+// Turns any error (API, network, local) into a readable message.
+//
+// @param {Error} error - The error to describe
+//
+// @returns {string} The message
+export function describeError(error) {
+  if (error instanceof APIError && error.body?.errors) {
+    return formatErrors(error.body.errors);
+  }
+
+  return error.message;
+}
+
+// Fetches every item of a collection, bypassing pagination.
+//
+// @param {string} path - The API path (e.g. /snippets)
+// @param {string} key - The collection key in the response
+// @param {object} filters - Search filters, sent as q[…] params
+// @param {string} [apiKey] - The API key to use
+//
+// @returns {Promise<array>} The items
+export async function listAll(path, key, filters = {}, apiKey) {
+  const json = await getClient(apiKey).get(path, { query: { page: "all", ...searchQuery(filters) } });
+  return json[key];
+}
+
+function searchQuery(filters) {
+  return Object.fromEntries(Object.entries(filters).map(([name, value]) => [`q[${name}]`, value]));
+}
+
+// Logs API errors and returns null instead of throwing, for interactive commands.
+async function orNull(promise) {
+  try {
+    return await promise;
+  } catch (error) {
+    log.error(describeError(error));
+    return null;
+  }
 }
 
 // Gets a template from PDFMonkey API.
@@ -37,17 +85,7 @@ function buildTemplateData(path) {
 //
 // @returns {Promise<object>} The template
 export async function getTemplate(templateId, apiKey) {
-  const url = `${baseUrl}/document_templates/${templateId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
-
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
-    return null;
-  }
-
-  return json.document_template;
+  return orNull(getClient(apiKey).documentTemplates.get(templateId));
 }
 
 // Gets a template debug URL from PDFMonkey API.
@@ -57,11 +95,7 @@ export async function getTemplate(templateId, apiKey) {
 //
 // @returns {Promise<string>} The debug URL
 export async function getTemplateDebugUrl(templateId, apiKey) {
-  let url = `${baseUrl}/document_template_debugs/${templateId}`;
-  let headers = buildHeaders(apiKey);
-  let response = await fetch(url, { headers });
-  let json = await response.json();
-
+  const json = await getClient(apiKey).get(`/document_template_debugs/${templateId}`);
   return json.document_template_debug.url;
 }
 
@@ -80,26 +114,17 @@ export async function getTemplatePreviewUrl(template, apiKey, debug) {
   return template.preview_url;
 }
 
-// Formats error objects into readable strings.
+// Reads the template content from local files.
 //
-// @param {object|array} errors - Error object or array from API
+// @param {string} path - Path to the template directory
 //
-// @returns {string} Formatted error message
-export function formatErrors(errors) {
-  let formatted;
-
-  if (Array.isArray(errors)) {
-    formatted = errors.map((error) => `${error.status} ${error.title} — ${error.detail}`).join("\n");
-  } else {
-    formatted = Object.entries(errors)
-      .map(([key, errorMessages]) => {
-        return errorMessages.map((errorMessage) => `${attributeNames[key]}: ${errorMessage}`);
-      })
-      .flat()
-      .join("\n");
-  }
-
-  return formatted;
+// @returns {object} The draft attributes of the template
+export function readTemplateContent(path) {
+  return {
+    body_draft: readFile(path, "body.html.liquid"),
+    scss_style_draft: readFile(path, "styles.scss"),
+    sample_data_draft: readFile(path, "sample_data.json"),
+  };
 }
 
 // Updates a template on PDFMonkey API.
@@ -108,20 +133,14 @@ export function formatErrors(errors) {
 // @param {string} apiKey - The API key to use
 // @param {string} path - The path to the template directory
 //
-// @returns {Promise<object>} Result object with success status and template or errors
+// @returns {Promise<object>} Result object with success status and template or formatted errors
 export async function updateTemplate(templateId, apiKey, path) {
-  const templateData = buildTemplateData(path);
-
-  const url = `${baseUrl}/document_templates/${templateId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { method: "PATCH", headers, body: templateData });
-  const json = await response.json();
-
-  if (json.errors) {
-    return { success: false, errors: json.errors };
+  try {
+    const template = await getClient(apiKey).documentTemplates.update(templateId, readTemplateContent(path));
+    return { success: true, template };
+  } catch (error) {
+    return { success: false, errors: describeError(error) };
   }
-
-  return { success: true, template: json.document_template };
 }
 
 // Fetches all workspaces from PDFMonkey API.
@@ -130,57 +149,45 @@ export async function updateTemplate(templateId, apiKey, path) {
 //
 // @returns {Promise<array>} The workspaces, sorted by identifier
 export async function getWorkspaces(apiKey) {
-  const url = `${baseUrl}/workspace_cards`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
-
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
-    return null;
-  }
-
-  return json.workspace_cards.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+  const workspaces = await listAll("/workspace_cards", "workspace_cards", {}, apiKey);
+  return workspaces.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
 }
 
 // Fetches a single template card from PDFMonkey API.
+//
+// There is no API endpoint for a single template card, so it is rebuilt from the template.
 //
 // @param {string} templateId - The ID of the template to fetch
 // @param {string} apiKey - The API key to use
 //
 // @returns {Promise<object>} The processed template card
 export async function getTemplateCard(templateId, apiKey) {
-  const url = `${baseUrl}/document_template_cards/${templateId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
-
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
+  const template = await getTemplate(templateId, apiKey);
+  if (!template) {
     return null;
   }
 
-  return buildTemplateCard(json.document_template_card);
+  let template_folder_identifier = null;
+
+  if (template.template_folder_id) {
+    const json = await getClient(apiKey).get(`/template_folders/${template.template_folder_id}`);
+    template_folder_identifier = json.template_folder.identifier;
+  }
+
+  return buildTemplateCard({ ...template, template_folder_identifier });
 }
 
-// Fetches all template cards from PDFMonkey API for a specific workspace.
+// Fetches all template cards from PDFMonkey API.
 //
-// @param {string} workspaceId - The ID of the workspace
+// @param {string} [workspaceId] - The ID of the workspace (default: all workspaces)
 // @param {string} apiKey - The API key to use
+// @param {string} [folders] - Folder filter: folder IDs (comma separated) or "none"
 //
 // @returns {Promise<array>} The templates, sorted by folder and identifier
-export async function getTemplateCards(workspaceId, apiKey) {
-  const url = `${baseUrl}/document_template_cards?page=all&q[workspace_id]=${workspaceId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
-
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
-    return null;
-  }
-
-  const templates = json.document_template_cards.map((templateCard) => buildTemplateCard(templateCard));
+export async function getTemplateCards(workspaceId, apiKey, folders) {
+  const filters = { workspace_id: workspaceId, folders };
+  const templateCards = await listAll("/document_template_cards", "document_template_cards", filters, apiKey);
+  const templates = templateCards.map((templateCard) => buildTemplateCard(templateCard));
 
   return templates.sort((a, b) => {
     const folderA = a.template_folder_identifier || "";
@@ -220,39 +227,23 @@ function buildTemplateCard(templateCard) {
 //
 // @returns {Promise<object>} The processed snippet
 export async function getSnippet(snippetId, apiKey) {
-  const url = `${baseUrl}/snippets/${snippetId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
-
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
-    return null;
-  }
-
-  return buildSnippet(json.snippet);
+  const snippet = await orNull(getClient(apiKey).snippets.get(snippetId));
+  return snippet && buildSnippet(snippet);
 }
 
 // Fetches all snippets from PDFMonkey API for a specific workspace.
 //
 // @param {string} workspaceId - The ID of the workspace
 // @param {string} apiKey - The API key to use
+// @param {string} [search] - Only return snippets whose identifier contains this string
 //
 // @returns {Promise<array>} The snippets, sorted by identifier
-export async function getSnippets(workspaceId, apiKey) {
-  const url = `${baseUrl}/snippets?page=all&q[workspace_id]=${workspaceId}`;
-  const headers = buildHeaders(apiKey);
-  const response = await fetch(url, { headers });
-  const json = await response.json();
+export async function getSnippets(workspaceId, apiKey, search) {
+  const snippets = await listAll("/snippets", "snippets", { workspace_id: workspaceId, search }, apiKey);
 
-  if (json.errors) {
-    log.error(formatErrors(json.errors));
-    return null;
-  }
-
-  const snippets = json.snippets.map((snippet) => buildSnippet(snippet));
-
-  return snippets.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+  return snippets
+    .map((snippet) => buildSnippet(snippet))
+    .sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
 }
 
 // Adds sanitized identifier to snippet data.
@@ -276,19 +267,12 @@ function buildSnippet(snippet) {
 // @param {string} apiKey - The API key to use
 // @param {string} path - The path to the snippet directory
 //
-// @returns {Promise<object>} Result object with success status and snippet or errors
+// @returns {Promise<object>} Result object with success status and snippet or formatted errors
 export async function updateSnippet(snippetId, apiKey, path) {
-  const code = readFile(path, "code.liquid");
-
-  const url = `${baseUrl}/snippets/${snippetId}`;
-  const headers = buildHeaders(apiKey);
-  const body = JSON.stringify({ code });
-  const response = await fetch(url, { method: "PATCH", headers, body });
-  const json = await response.json();
-
-  if (json.errors) {
-    return { success: false, errors: json.errors };
+  try {
+    const snippet = await getClient(apiKey).snippets.update(snippetId, { code: readFile(path, "code.liquid") });
+    return { success: true, snippet };
+  } catch (error) {
+    return { success: false, errors: describeError(error) };
   }
-
-  return { success: true, snippet: json.snippet };
 }

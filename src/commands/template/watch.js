@@ -6,7 +6,6 @@ import { getResourceId } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getTemplate, updateTemplate, getTemplatePreviewUrl } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
-import { formatErrors } from "../../utils/pdfmonkey.js";
 import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
@@ -46,8 +45,6 @@ export default async function watchCommand(
     if (update.success) {
       previewUrl = await getTemplatePreviewUrl(update.template, apiKey, debug);
       liveReloadServer.refresh("/");
-    } else {
-      update.errors = formatErrors(update.errors);
     }
 
     return update;

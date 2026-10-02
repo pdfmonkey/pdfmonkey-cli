@@ -5,13 +5,11 @@ import { program } from "commander";
 import { templateInitCommand, templateWatchCommand } from "../src/commands/template.js";
 import { snippetInitCommand, snippetWatchCommand } from "../src/commands/snippet.js";
 import { resourcesInitCommand, resourcesWatchCommand } from "../src/commands/resources.js";
+import { run } from "../src/utils/cli.js";
 import packageConfig from "../package.json" with { type: "json" };
 
-const authArgs = [
-  "-k, --api-key <key>",
-  "The API key to use (default: PDFMONKEY_API_KEY environment variable)",
-  process.env.PDFMONKEY_API_KEY,
-];
+// No default value here: commander would print the API key in the help output
+const authArgs = ["-k, --api-key <key>", "The API key to use (default: PDFMONKEY_API_KEY environment variable)"];
 
 const portArgs = [
   "-p, --port <port>",
@@ -38,7 +36,7 @@ program
   .description("Initialize multiple PDFMonkey resources in sequence")
   .option("-e, --edit", "Opens initialized resources in your default editor (based on EDITOR environment variable)")
   .option(...authArgs)
-  .action(resourcesInitCommand);
+  .action(run(resourcesInitCommand));
 
 program
   .command("watch")
@@ -49,7 +47,7 @@ program
   .option(...portArgs)
   .option(...livereloadPortArgs)
   .option(...authArgs)
-  .action(resourcesWatchCommand);
+  .action(run(resourcesWatchCommand));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Template commands                                                          //
@@ -64,7 +62,7 @@ templateCommand
   .argument("[path]", "The path to the template folder (default: ID of the template in current folder)")
   .option("-e, --edit", "Opens the template folder in your default editor (based on EDITOR environment variable)")
   .option(...authArgs)
-  .action(templateInitCommand);
+  .action(run(templateInitCommand));
 
 templateCommand
   .command("watch")
@@ -76,7 +74,7 @@ templateCommand
   .option(...livereloadPortArgs)
   .option("-t, --template-id <templateId>", "The ID of the template to use (default: current folder name)")
   .option(...authArgs)
-  .action(templateWatchCommand);
+  .action(run(templateWatchCommand));
 
 ////////////////////////////////////////////////////////////////////////////////
 // Snippet commands                                                           //
@@ -91,7 +89,7 @@ snippetCommand
   .argument("[path]", "The path to the snippet file (default: ID of the snippet in current folder)")
   .option("-e, --edit", "Opens the snippet file in your default editor (based on EDITOR environment variable)")
   .option(...authArgs)
-  .action(snippetInitCommand);
+  .action(run(snippetInitCommand));
 
 snippetCommand
   .command("watch")
@@ -99,6 +97,6 @@ snippetCommand
   .argument("[path]", "The path to the snippet folder (default: current folder)", process.cwd())
   .option("-s, --snippet-id <snippetId>", "The ID of the snippet to use (default: current folder name)")
   .option(...authArgs)
-  .action(snippetWatchCommand);
+  .action(run(snippetWatchCommand));
 
 program.parse(process.argv);
