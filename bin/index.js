@@ -6,6 +6,7 @@ import { templateInitCommand, templateWatchCommand } from "../src/commands/templ
 import { snippetInitCommand, snippetWatchCommand } from "../src/commands/snippet.js";
 import { resourcesInitCommand, resourcesWatchCommand } from "../src/commands/resources.js";
 import * as template from "../src/commands/template/manage.js";
+import * as snippet from "../src/commands/snippet/manage.js";
 import * as folder from "../src/commands/folder.js";
 import { whoamiCommand, workspaceListCommand } from "../src/commands/account.js";
 import { run } from "../src/utils/cli.js";
@@ -229,6 +230,55 @@ folderCommand
 ////////////////////////////////////////////////////////////////////////////////
 
 const snippetCommand = program.command("snippet").aliases(["snp"]).description("Manage PDFMonkey snippets");
+
+snippetCommand
+  .command("list")
+  .alias("ls")
+  .description("List the snippets of a workspace")
+  .option(...workspaceArgs)
+  .option("-s, --search <text>", "Only list snippets whose name contains this text")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(snippet.listCommand));
+
+snippetCommand
+  .command("get")
+  .alias("show")
+  .description("Show a snippet and its code")
+  .argument("<snippetId>", "The ID of the snippet")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(snippet.getCommand));
+
+snippetCommand
+  .command("create")
+  .description("Create a snippet")
+  .requiredOption("-n, --name <name>", "The name of the snippet")
+  .option(...workspaceArgs)
+  .option("--from <path>", "A snippet folder to read the code from (code.liquid)")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(snippet.createCommand));
+
+snippetCommand
+  .command("update")
+  .description("Update a snippet")
+  .argument("<snippetId>", "The ID of the snippet")
+  .option("-n, --name <name>", "The new name of the snippet")
+  .option("--from <path>", "A snippet folder to read the code from (code.liquid)")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(snippet.updateCommand));
+
+snippetCommand
+  .command("delete")
+  .alias("rm")
+  .description("Delete a snippet")
+  .argument("<snippetId>", "The ID of the snippet")
+  .option(...yesArgs)
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(snippet.deleteCommand));
 
 snippetCommand
   .command("init")
