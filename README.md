@@ -277,6 +277,7 @@ Here is a summary of the environment variables that can be set to customize the 
 - `PAGER`: The pager to use when displaying diffs.
 - `PORT`: The port to run the preview server on.
 - `LIVE_RELOAD_PORT`: The port to run the live-reload server on.
+- `PDFMONKEY_API_BASE`: The base URL of the API (default: `https://api.pdfmonkey.io/api/v1`).
 
 ## License
 

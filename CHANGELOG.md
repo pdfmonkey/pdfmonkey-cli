@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Updating dependencies, Node.js 22.12 or later is now required
+- Using the official `pdfmonkey` SDK to talk to the API
+- Fixing `template init <template-id>` failing to fetch the template
+- Fixing the API key being displayed in the commands help
+- Fixing the template ID missing from metadata when inferred from the folder name
 
 ## 1.1.0 (2026-02-03)
 
