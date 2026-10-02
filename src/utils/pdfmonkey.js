@@ -64,6 +64,22 @@ export async function listAll(path, key, filters = {}, apiKey) {
   return json[key];
 }
 
+// Fetches a single page of a collection.
+//
+// @param {string} path - The API path (e.g. /document_cards)
+// @param {string} key - The collection key in the response
+// @param {object} filters - Search filters, sent as q[…] params
+// @param {object} pagination - { page, perPage }
+// @param {string} [apiKey] - The API key to use
+//
+// @returns {Promise<{items: array, meta: object}>} The items and pagination metadata
+export async function listPage(path, key, filters, { page, perPage }, apiKey) {
+  const query = { ...searchQuery(filters), "page[number]": page, "page[size]": perPage };
+  const json = await getClient(apiKey).get(path, { query });
+
+  return { items: json[key], meta: json.meta };
+}
+
 function searchQuery(filters) {
   return Object.fromEntries(Object.entries(filters).map(([name, value]) => [`q[${name}]`, value]));
 }

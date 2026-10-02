@@ -8,6 +8,7 @@
 - Adding `folder` commands to manage template folders
 - Adding `PDFMONKEY_WORKSPACE` environment variable
 - Adding `list`, `get`, `create`, `update` and `delete` snippet commands
+- Adding `document` commands to list (with filters), get, create, update, download and delete documents
 - Updating dependencies, Node.js 22.12 or later is now required
 - Using the official `pdfmonkey` SDK to talk to the API
 - Fixing `template init <template-id>` failing to fetch the template
