@@ -52,6 +52,7 @@ Currently supported resources:
 
 - `workspace` or `ws`: List PDFMonkey workspaces
 - `template` or `tpl`: Manage PDFMonkey templates
+- `folder` or `fld`: Manage PDFMonkey template folders
 - `snippet` or `snp`: Manage PDFMonkey snippets
 
 For example:
@@ -264,9 +265,40 @@ Besides local edition, the CLI covers the everyday operations on your PDFMonkey 
 
 ### Workspaces
 
+Commands that work within a workspace accept a `-w, --workspace` option taking either the workspace ID or its name. You can also set the `PDFMONKEY_WORKSPACE` environment variable. When none is given in an interactive terminal, the CLI will ask you to pick one.
+
 ```bash
 pdfmonkey whoami          # Check which account the API key belongs to
 pdfmonkey workspace list
+```
+
+### Templates
+
+```bash
+pdfmonkey template list                       # Across all workspaces
+pdfmonkey template list -w "My Workspace"     # In a workspace
+pdfmonkey template list -w "My Workspace" -f Invoices   # In a folder (ID or name), or "none"
+pdfmonkey template get <template-id>          # Use --json to get the full content
+
+pdfmonkey template create -w "My Workspace" -n "Invoice" --from ./invoice
+pdfmonkey template create -w "My Workspace" -n "Invoice" --mode builder --folder Invoices
+pdfmonkey template update <template-id> --from ./invoice
+pdfmonkey template update <template-id> -n "New name" --folder none
+pdfmonkey template publish <template-id>
+pdfmonkey template delete <template-id>
+```
+
+`--from` reads the content from a template folder (`body.html.liquid`, `styles.scss` and `sample_data.json`), the same layout used by `init` and `watch`. When creating a template, the folder is linked to the new template so you can `watch` it right away.
+
+Like in the dashboard, changes are saved as a draft: use `publish` to make them live.
+
+### Folders
+
+```bash
+pdfmonkey folder list -w "My Workspace"
+pdfmonkey folder create -w "My Workspace" -n "Invoices"
+pdfmonkey folder rename <folder-id> "Quotes"
+pdfmonkey folder delete <folder-id>
 ```
 
 ## Scripting and AI agents
@@ -274,6 +306,8 @@ pdfmonkey workspace list
 The CLI is designed to be used by scripts and LLM-based agents as well as humans:
 
 - Every command accepts `--json` to output raw JSON, e.g. `pdfmonkey workspace list --json | jq '.[].id'`.
+- Commands never prompt when all required options are given. Without a terminal, missing information is an error rather than a prompt.
+- Deletions require `-y, --yes` when not run in an interactive terminal.
 - Errors are printed on the standard error output and the process exits with a non-zero code.
 
 ## Metadata
@@ -294,6 +328,7 @@ The `.pdfmonkey.json` file looks like this:
 Here is a summary of the environment variables that can be set to customize the behavior of the CLI:
 
 - `PDFMONKEY_API_KEY`: The API key to use for authentication.
+- `PDFMONKEY_WORKSPACE`: The default workspace (ID or name).
 - `DIFF`: The diff tool to use.
 - `PAGER`: The pager to use when displaying diffs.
 - `PORT`: The port to run the preview server on.
