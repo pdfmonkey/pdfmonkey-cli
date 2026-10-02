@@ -54,6 +54,7 @@ Currently supported resources:
 - `template` or `tpl`: Manage PDFMonkey templates
 - `folder` or `fld`: Manage PDFMonkey template folders
 - `snippet` or `snp`: Manage PDFMonkey snippets
+- `document` or `doc`: Manage PDFMonkey documents
 
 For example:
 
@@ -313,11 +314,31 @@ pdfmonkey snippet delete <snippet-id>
 
 `--from` reads the code from the `code.liquid` file of a snippet folder.
 
+### Documents
+
+```bash
+pdfmonkey document list -w "My Workspace"
+pdfmonkey document list -t <template-id>,<template-id> -s failure --updated-since 2026-01-01
+pdfmonkey document list -q invoice-42 --page 2 --per-page 50
+pdfmonkey document get <document-id>          # Use --json to get the payload and generation logs
+
+pdfmonkey document create -t <template-id> --payload @data.json -o ./invoices/
+pdfmonkey document create -t <template-id> --payload '{"name": "Alice"}' --meta '{"_filename": "alice.pdf"}' --wait
+cat data.json | pdfmonkey document create -t <template-id> --payload - --draft
+pdfmonkey document update <document-id> --payload @data.json --generate --wait
+pdfmonkey document download <document-id> [path]
+pdfmonkey document delete <document-id>
+```
+
+`--payload` and `--meta` accept inline JSON, a file (`@path/to/file.json`) or the standard input (`-`). Documents are generated right away unless `--draft` is given. `-o, --output` downloads the generated file to a path or folder once ready.
+
+The available filters for `document list` are the template(s), the status (`draft`, `pending`, `generating`, `success` or `failure`), a search on the filename or ID, and the last update date.
+
 ## Scripting and AI agents
 
 The CLI is designed to be used by scripts and LLM-based agents as well as humans:
 
-- Every command accepts `--json` to output raw JSON, e.g. `pdfmonkey workspace list --json | jq '.[].id'`.
+- Every command accepts `--json` to output raw JSON, e.g. `pdfmonkey template list --json | jq '.[].id'`.
 - Commands never prompt when all required options are given. Without a terminal, missing information is an error rather than a prompt.
 - Deletions require `-y, --yes` when not run in an interactive terminal.
 - Errors are printed on the standard error output and the process exits with a non-zero code.
@@ -341,11 +362,11 @@ Here is a summary of the environment variables that can be set to customize the 
 
 - `PDFMONKEY_API_KEY`: The API key to use for authentication.
 - `PDFMONKEY_WORKSPACE`: The default workspace (ID or name).
+- `PDFMONKEY_API_BASE`: The base URL of the API (default: `https://api.pdfmonkey.io/api/v1`).
 - `DIFF`: The diff tool to use.
 - `PAGER`: The pager to use when displaying diffs.
 - `PORT`: The port to run the preview server on.
 - `LIVE_RELOAD_PORT`: The port to run the live-reload server on.
-- `PDFMONKEY_API_BASE`: The base URL of the API (default: `https://api.pdfmonkey.io/api/v1`).
 
 ## License
 

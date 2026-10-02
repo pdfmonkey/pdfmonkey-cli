@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import fs from "fs";
 import { confirm, isCancel } from "@clack/prompts";
 
 import { UUID_PATTERN } from "./files.js";
@@ -78,6 +79,56 @@ export function printDetails(pairs) {
   const width = Math.max(...visiblePairs.map(([label]) => label.length));
 
   visiblePairs.forEach(([label, value]) => console.log(`${chalk.bold(label.padEnd(width))}  ${value}`));
+}
+
+// Reads a JSON value given inline, as @path/to/file.json, or as - (stdin).
+//
+// @param {string} [value] - The raw option value
+//
+// @returns {string|undefined} The JSON string, validated
+export function readJsonInput(value) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  let json = value;
+
+  if (value === "-") {
+    json = fs.readFileSync(0, "utf-8");
+  } else if (value.startsWith("@")) {
+    json = fs.readFileSync(value.slice(1), "utf-8");
+  }
+
+  try {
+    JSON.parse(json);
+  } catch (error) {
+    throw new Error(`Invalid JSON: ${error.message}`, { cause: error });
+  }
+
+  return json;
+}
+
+// Converts a date (ISO 8601) or a UNIX timestamp into a UNIX timestamp, as expected by the API.
+//
+// @param {string} [value] - The raw option value
+//
+// @returns {number|undefined} The timestamp in seconds
+export function parseTimestamp(value) {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (/^\d+$/.test(value)) {
+    return Number(value);
+  }
+
+  const time = Date.parse(value);
+
+  if (Number.isNaN(time)) {
+    throw new Error(`Invalid date: ${value}`);
+  }
+
+  return Math.floor(time / 1000);
 }
 
 // Asks for confirmation before a destructive action, unless --yes was given.
