@@ -5,7 +5,7 @@ import { exec } from "child_process";
 import { confirm, isCancel, log } from "@clack/prompts";
 import { cancelOperation } from "./term.js";
 
-const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
+export const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
 
 // Checks if there are already files in the specified path and asks for confirmation to overwrite.
 //

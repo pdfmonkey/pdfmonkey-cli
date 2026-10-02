@@ -4,6 +4,9 @@
 
 - Adding `workspace list` and `whoami` commands
 - Adding `--json` output for scripts and AI agents
+- Adding `list`, `get`, `create`, `update`, `publish` and `delete` template commands, supporting code and builder templates
+- Adding `folder` commands to manage template folders
+- Adding `PDFMONKEY_WORKSPACE` environment variable
 - Updating dependencies, Node.js 22.12 or later is now required
 - Using the official `pdfmonkey` SDK to talk to the API
 - Fixing `template init <template-id>` failing to fetch the template
