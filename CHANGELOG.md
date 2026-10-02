@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Updating dependencies, Node.js 22.12 or later is now required
+
 ## 1.1.0 (2026-02-03)
 
 - Adding base URL configuration from ENV

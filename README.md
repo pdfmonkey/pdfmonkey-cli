@@ -6,7 +6,7 @@ This CLI tool is a great solution for developers who want to author [PDFMonkey](
 
 ## Installation
 
-The PDFMonkey CLI can be installed using npm.
+The PDFMonkey CLI requires Node.js 22.12 or later and can be installed using npm.
 
 ```bash
 npm install -g @pdfmonkey/cli

@@ -18,7 +18,6 @@ export async function handleConflict(remoteData, remoteUpdatedAt, path, filename
   const localData = readFile(path, filename);
   const localUpdatedAt = fileUpdatedAt(path, filename);
   const attributeName = fileToAttributeName[filename];
-  let choice = undefined;
 
   if ((remoteData ?? "") === (localData ?? "")) {
     return true;
@@ -31,7 +30,7 @@ export async function handleConflict(remoteData, remoteUpdatedAt, path, filename
   );
 
   while (true) {
-    choice = await select({
+    const choice = await select({
       message: "What content do you want to keep?",
       options: [
         { value: "remote", label: "Remote content" },

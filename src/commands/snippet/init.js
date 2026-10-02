@@ -22,15 +22,7 @@ export default async function initCommand(snippetId, path, { apiKey, edit }) {
 }
 
 async function fetchSnippet(snippetId, apiKey) {
-  let snippet = null;
-
-  if (snippetId) {
-    snippet = await getSnippet(snippetId, apiKey);
-  } else {
-    snippet = await runSnippetSelection(apiKey);
-  }
-
-  return snippet;
+  return snippetId ? await getSnippet(snippetId, apiKey) : await runSnippetSelection(apiKey);
 }
 
 function pathCandidates(currentDir, snippet) {
