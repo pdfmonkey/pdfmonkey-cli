@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Adding `workspace list` and `whoami` commands
+- Adding `--json` output for scripts and AI agents
 - Updating dependencies, Node.js 22.12 or later is now required
 - Using the official `pdfmonkey` SDK to talk to the API
 - Removing the `--debug` option of `watch` commands
