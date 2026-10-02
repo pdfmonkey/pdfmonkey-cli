@@ -291,6 +291,18 @@ pdfmonkey folder rename <folder-id> "Quotes"
 pdfmonkey folder delete <folder-id>
 ```
 
+### Snippets
+
+```bash
+pdfmonkey snippet list -w "My Workspace" [--search header]
+pdfmonkey snippet get <snippet-id>
+pdfmonkey snippet create -w "My Workspace" -n "header" --from ./header
+pdfmonkey snippet update <snippet-id> --from ./header
+pdfmonkey snippet delete <snippet-id>
+```
+
+`--from` reads the code from the `code.liquid` file of a local snippet directory.
+
 ## Scripting and AI agents
 
 The CLI is designed to be used by scripts and LLM-based agents as well as humans:
