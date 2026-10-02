@@ -1,7 +1,7 @@
 {
   "name": "@pdfmonkey/cli",
   "version": "1.1.0",
-  "description": "A CLI tool to edit your PDFMonkey template locally with your favorite tools.",
+  "description": "A CLI tool to manage your PDFMonkey templates, snippets and documents, and edit templates locally with your favorite tools.",
   "keywords": [
     "PDFMonkey",
     "PDF",
@@ -28,24 +28,23 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@clack/prompts": "^0.9.1",
-    "chalk": "^5.4.1",
-    "chokidar": "^4.0.3",
-    "commander": "^13.0.0",
-    "diff": "^7.0.0",
-    "livereload": "^0.9.3",
-    "open": "^10.1.0",
+    "@clack/prompts": "^1.8.1",
+    "chalk": "^6.0.1",
+    "chokidar": "^5.0.0",
+    "commander": "^15.0.0",
+    "livereload": "^0.10.3",
+    "open": "^11.0.4",
     "shell-escape": "^0.2.0"
   },
   "devDependencies": {
-    "@eslint/js": "^9.18.0",
-    "eslint": "^9.18.0",
-    "eslint-config-prettier": "^10.0.1",
-    "eslint-plugin-prettier": "^5.2.2",
-    "globals": "^15.14.0",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "globals": "^17.13.0",
     "husky": "^9.1.7",
-    "lint-staged": "^15.4.1",
-    "prettier": "^3.4.2"
+    "lint-staged": "^17.6.0",
+    "prettier": "^3.9.9"
   },
   "bin": {
     "pdfmonkey": "bin/index.js"
@@ -56,7 +55,9 @@
     "LICENSE",
     "README.md"
   ],
-  "node": ">=18",
+  "engines": {
+    "node": ">=22.12"
+  },
   "publishConfig": {
     "access": "public",
     "provenance": true

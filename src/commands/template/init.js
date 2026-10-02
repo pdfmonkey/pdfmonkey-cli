@@ -22,16 +22,7 @@ export default async function initCommand(templateId, path, { apiKey, edit }) {
 }
 
 async function fetchTemplate(templateId, apiKey) {
-  let templateCard = null;
-
-  if (templateId) {
-    templateCard = await getTemplateCard(templateId, apiKey);
-  } else {
-    templateCard = await runTemplateSelection(apiKey);
-    templateId = templateCard.id;
-  }
-
-  return templateCard;
+  return templateId ? await getTemplateCard(templateId, apiKey) : await runTemplateSelection(apiKey);
 }
 
 function pathCandidates(currentDir, templateCard) {
