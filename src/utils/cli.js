@@ -1,6 +1,10 @@
 import chalk from "chalk";
+import { confirm, isCancel } from "@clack/prompts";
 
-import { describeError } from "./pdfmonkey.js";
+import { UUID_PATTERN } from "./files.js";
+import { describeError, getClient, getWorkspaces } from "./pdfmonkey.js";
+import { cancelOperation } from "./term.js";
+import { pickWorkspace } from "../commands/shared/workspace.js";
 
 // Wraps a command action so errors are printed nicely and the process exits with a non-zero code.
 //
@@ -16,6 +20,13 @@ export function run(action) {
       process.exitCode = 1;
     }
   };
+}
+
+// Whether prompts can be displayed (and answered) safely.
+//
+// @returns {boolean}
+export function isInteractive() {
+  return Boolean(process.stdin.isTTY && process.stdout.isTTY);
 }
 
 // Prints data as JSON when requested, using the human formatter otherwise.
@@ -67,6 +78,125 @@ export function printDetails(pairs) {
   const width = Math.max(...visiblePairs.map(([label]) => label.length));
 
   visiblePairs.forEach(([label, value]) => console.log(`${chalk.bold(label.padEnd(width))}  ${value}`));
+}
+
+// Asks for confirmation before a destructive action, unless --yes was given.
+//
+// @param {string} message - The confirmation question
+// @param {boolean} yes - Whether confirmation was given upfront
+//
+// @returns {Promise<void>}
+export async function confirmDestruction(message, yes) {
+  if (yes) {
+    return;
+  }
+
+  if (!isInteractive()) {
+    throw new Error("Refusing to delete without confirmation, use --yes to proceed.");
+  }
+
+  const confirmed = await confirm({ message, initialValue: false });
+
+  if (isCancel(confirmed) || !confirmed) {
+    cancelOperation();
+  }
+}
+
+// Resolves a workspace given by ID or name.
+//
+// Falls back on the PDFMONKEY_WORKSPACE environment variable, then on an interactive selection.
+//
+// @param {string} [value] - Workspace ID or name
+// @param {string} apiKey - The API key to use
+// @param {object} [options]
+// @param {boolean} [options.required=true] - Whether a workspace must be found
+//
+// @returns {Promise<string|undefined>} The workspace ID
+export async function resolveWorkspace(value = process.env.PDFMONKEY_WORKSPACE, apiKey, { required = true } = {}) {
+  if (!value) {
+    if (!required) {
+      return undefined;
+    }
+
+    if (isInteractive()) {
+      return await pickWorkspace(apiKey);
+    }
+
+    throw new Error("A workspace is required, use --workspace <id|name> or set PDFMONKEY_WORKSPACE.");
+  }
+
+  if (UUID_PATTERN.test(value)) {
+    return value;
+  }
+
+  const workspaces = await getWorkspaces(apiKey);
+  return findByIdentifier(workspaces, value, "Workspace").id;
+}
+
+// Resolves a template folder given by ID or name. "none" is kept as is.
+//
+// @param {string} [value] - Folder ID, name or "none"
+// @param {Function} getWorkspaceId - Returns the workspace ID, only called to resolve a name
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<string|undefined>} The folder ID or "none"
+export async function resolveFolder(value, getWorkspaceId, apiKey) {
+  if (!value || value === "none" || UUID_PATTERN.test(value)) {
+    return value;
+  }
+
+  const workspaceId = await getWorkspaceId();
+
+  if (!workspaceId) {
+    throw new Error("Finding a folder by name requires a workspace, use --workspace <id|name>.");
+  }
+
+  const folders = await getClient(apiKey).templateFolders.listAll({ workspace_id: workspaceId });
+  return findByIdentifier(folders, value, "Folder").id;
+}
+
+// Resolves a PDF engine given by ID or name (e.g. v5).
+//
+// @param {string} [value] - Engine ID or name
+// @param {string} apiKey - The API key to use
+//
+// @returns {Promise<string|undefined>} The engine ID
+export async function resolveEngine(value, apiKey) {
+  if (!value || UUID_PATTERN.test(value)) {
+    return value;
+  }
+
+  const engines = await getClient(apiKey).pdfEngines.list();
+  const engine = engines.find(({ name }) => name === value);
+
+  if (!engine) {
+    throw new Error(`Unknown engine ${value}, available engines: ${engines.map(({ name }) => name).join(", ")}`);
+  }
+
+  return engine.id;
+}
+
+function findByIdentifier(items, identifier, label) {
+  const matches = items.filter((item) => item.identifier.toLowerCase() === identifier.toLowerCase());
+
+  if (matches.length === 0) {
+    throw new Error(`${label} not found: ${identifier}`);
+  }
+
+  if (matches.length > 1) {
+    throw new Error(`Several items are named ${identifier}, use an ID instead.`);
+  }
+
+  return matches[0];
+}
+
+// Removes undefined values from an object, to only send what was given.
+//
+// @param {object} object - The object to compact
+//
+// @returns {object} The compacted object
+export function compact(object) {
+  return Object.fromEntries(Object.entries(object).filter(([, value]) => value !== undefined));
 }
 
 // Formats an API timestamp for human output.

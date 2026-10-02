@@ -42,11 +42,11 @@ export default async function watchCommand(paths, { apiKey, openBrowser, port, l
   }
 
   if (resources.length === 0) {
-    outro("No folders to watch");
+    outro("No directories to watch");
     process.exit(0);
   }
 
-  log.info(`Watching ${resources.length} folder(s)...`);
+  log.info(`Watching ${resources.length} ${resources.length === 1 ? "directory" : "directories"}...`);
 
   let templateLiveReloadServer = null;
   const template = resources.find((r) => r.isTemplate);
@@ -94,7 +94,7 @@ export default async function watchCommand(paths, { apiKey, openBrowser, port, l
 
 async function continueAdding() {
   return await confirm({
-    message: `Do you want to add another folder to watch?`,
+    message: `Do you want to add another directory to watch?`,
     initialValue: false,
   });
 }
@@ -170,7 +170,7 @@ async function promptForPath() {
     ];
 
     const selected = await select({
-      message: "Select a PDFMonkey folder to watch",
+      message: "Select a PDFMonkey directory to watch",
       options: options,
     });
 
