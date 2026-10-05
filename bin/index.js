@@ -7,6 +7,7 @@ import { snippetInitCommand, snippetWatchCommand } from "../src/commands/snippet
 import { resourcesInitCommand, resourcesWatchCommand } from "../src/commands/resources.js";
 import * as template from "../src/commands/template/manage.js";
 import * as snippet from "../src/commands/snippet/manage.js";
+import * as doc from "../src/commands/document.js";
 import * as folder from "../src/commands/folder.js";
 import { whoamiCommand, workspaceListCommand } from "../src/commands/account.js";
 import { run } from "../src/utils/cli.js";
@@ -35,6 +36,16 @@ const livereloadPortArgs = [
   "Livereload port (default: 2082 or LIVE_RELOAD_PORT environment variable)",
   process.env.LIVE_RELOAD_PORT || 2082,
 ];
+
+const positiveInteger = (value) => {
+  const number = Number(value);
+
+  if (!Number.isInteger(number) || number < 1) {
+    program.error(`Expected a positive integer, got ${value}`);
+  }
+
+  return number;
+};
 
 program
   .name("pdfmonkey")
@@ -294,5 +305,93 @@ snippetCommand
   .option("-s, --snippet-id <snippetId>", "The ID of the snippet to use (default: current directory name)")
   .option(...authArgs)
   .action(run(snippetWatchCommand));
+
+////////////////////////////////////////////////////////////////////////////////
+// Document commands                                                          //
+////////////////////////////////////////////////////////////////////////////////
+
+const documentCommand = program.command("document").aliases(["doc"]).description("Manage PDFMonkey documents");
+
+const payloadArgs = ["--payload <json>", "The data of the document: inline JSON, @path/to/file.json or - for stdin"];
+const metaArgs = ["--meta <json>", "The meta data of the document (e.g. _filename): inline JSON, @file.json or -"];
+const waitArgs = ["--wait", "Wait for the generation to finish"];
+const outputArgs = ["-o, --output <path>", "Download the generated file to this path or directory (implies --wait)"];
+
+documentCommand
+  .command("list")
+  .alias("ls")
+  .description("List documents, most recent first (default: across all workspaces)")
+  .option(...workspaceArgs)
+  .option("-t, --template <ids>", "Only list documents of these templates (comma separated IDs)")
+  .addOption(
+    new Option("-s, --status <status>", "Only list documents with this status").choices([
+      "draft",
+      "pending",
+      "generating",
+      "success",
+      "failure",
+    ]),
+  )
+  .option("-q, --search <text>", "Only list documents whose filename contains this text, or with this ID")
+  .option("--updated-since <date>", "Only list documents updated since this date (ISO 8601 or UNIX timestamp)")
+  .option("--page <number>", "The page to fetch", positiveInteger, 1)
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.listCommand));
+
+documentCommand
+  .command("get")
+  .alias("show")
+  .description("Show a document (use --json to get its payload and generation logs)")
+  .argument("<documentId>", "The ID of the document")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.getCommand));
+
+documentCommand
+  .command("create")
+  .alias("generate")
+  .description("Create a document and start its generation")
+  .requiredOption("-t, --template <templateId>", "The ID of the template to use")
+  .option(...payloadArgs)
+  .option(...metaArgs)
+  .option("--draft", "Only create the document, without generating it")
+  .option(...waitArgs)
+  .option(...outputArgs)
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.createCommand));
+
+documentCommand
+  .command("update")
+  .description("Update a document")
+  .argument("<documentId>", "The ID of the document")
+  .option(...payloadArgs)
+  .option(...metaArgs)
+  .option("-g, --generate", "Start the generation of the document")
+  .option(...waitArgs)
+  .option(...outputArgs)
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.updateCommand));
+
+documentCommand
+  .command("download")
+  .description("Download the generated file of a document")
+  .argument("<documentId>", "The ID of the document")
+  .argument("[path]", "The path or directory to save the file to (default: current directory)")
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.downloadCommand));
+
+documentCommand
+  .command("delete")
+  .alias("rm")
+  .description("Delete a document")
+  .argument("<documentId>", "The ID of the document")
+  .option(...yesArgs)
+  .option(...jsonArgs)
+  .option(...authArgs)
+  .action(run(doc.deleteCommand));
 
 program.parse(process.argv);
