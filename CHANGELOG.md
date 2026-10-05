@@ -7,6 +7,7 @@
 - Adding `list`, `get`, `create`, `update`, `publish` and `delete` template commands, supporting code and builder templates
 - Adding `folder` commands to manage template folders
 - Adding `PDFMONKEY_WORKSPACE` environment variable
+- Adding `list`, `get`, `create`, `update` and `delete` snippet commands
 - Updating dependencies, Node.js 22.12 or later is now required
 - Using the official `pdfmonkey` SDK to talk to the API
 - Removing the `--debug` option of `watch` commands
