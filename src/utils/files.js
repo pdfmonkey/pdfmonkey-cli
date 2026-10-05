@@ -5,7 +5,7 @@ import { exec } from "child_process";
 import { confirm, isCancel, log } from "@clack/prompts";
 import { cancelOperation } from "./term.js";
 
-const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
+export const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
 
 // Checks if there are already files in the specified path and asks for confirmation to overwrite.
 //
@@ -22,7 +22,7 @@ export async function avoidConflicts(path) {
   log.warn(`Files are already present in ${chalk.yellow(path)}.`);
 
   let overwrite = await confirm({
-    message: "Are you sure you want to use this folder at the risk of losing data?",
+    message: "Are you sure you want to use this directory at the risk of losing data?",
     initialValue: false,
   });
 
@@ -41,7 +41,7 @@ export function ensurePathPresent(path) {
     return;
   }
 
-  log.info(`Creating folder ${chalk.yellow(path)}`);
+  log.info(`Creating directory ${chalk.yellow(path)}`);
   fs.mkdirSync(path, { recursive: true });
 }
 

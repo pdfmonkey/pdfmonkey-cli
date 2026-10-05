@@ -52,6 +52,7 @@ Currently supported resources:
 
 - `workspace` or `ws`: List PDFMonkey workspaces
 - `template` or `tpl`: Manage PDFMonkey templates
+- `folder` or `fld`: Manage PDFMonkey template folders
 - `snippet` or `snp`: Manage PDFMonkey snippets
 
 For example:
@@ -94,16 +95,16 @@ Alternatively, you can specify the template ID as a second argument.
 pdfmonkey template init <template-id>
 ```
 
-You will then be prompted to choose the destination folder for the template files. You can also specify the destination folder as a second argument.
+You will then be prompted to choose the destination directory for the template files. You can also specify the destination directory as a second argument.
 
 ```bash
-pdfmonkey template init <template-id> <destination-folder>
+pdfmonkey template init <template-id> <destination-directory>
 ```
 
 > [!TIP]
 > **Open in Editor**
 >
-> You can also open the created folder in your default editor using the `-e` or `--edit` option.
+> You can also open the created directory in your default editor using the `-e` or `--edit` option.
 >
 > ```bash
 > pdfmonkey template init <template-id> -e
@@ -111,21 +112,21 @@ pdfmonkey template init <template-id> <destination-folder>
 
 ### Watch
 
-To start watching a template folder and sync the changes to PDFMonkey, run the following command:
+To start watching a template directory and sync the changes to PDFMonkey, run the following command:
 
 ```bash
 pdfmonkey template watch
 ```
 
-This will start watching files in **the current folder** and sync automatically. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the template.
+This will start watching files in **the current directory** and sync automatically. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the template.
 
-To monitor a different folder, simply pass the path as the first argument:
+To monitor a different directory, simply pass the path as the first argument:
 
 ```bash
 pdfmonkey template watch <path>
 ```
 
-If for some reason the folder doesn't contain metadata or you want to use a different template ID, you can specify it using the `-t` option:
+If for some reason the directory doesn't contain metadata or you want to use a different template ID, you can specify it using the `-t` option:
 
 ```bash
 pdfmonkey template watch [path] -t <template-id>
@@ -185,13 +186,13 @@ Alternatively, you can specify the snippet ID as a second argument.
 pdfmonkey snippet init <snippet-id>
 ```
 
-You will then be prompted to choose the destination folder for the snippet. You can also specify the destination folder as a second argument.
+You will then be prompted to choose the destination directory for the snippet. You can also specify the destination directory as a second argument.
 
 ```bash
-pdfmonkey snippet init <snippet-id> <destination-folder>
+pdfmonkey snippet init <snippet-id> <destination-directory>
 ```
 
-The snippet will be stored in a folder structure similar to templates, with the code in a file named `code.liquid`.
+The snippet will be stored in a directory structure similar to templates, with the code in a file named `code.liquid`.
 
 > [!TIP]
 > **Open in Editor**
@@ -204,21 +205,21 @@ The snippet will be stored in a folder structure similar to templates, with the 
 
 ### Watch
 
-To start watching a snippet folder and sync the changes to PDFMonkey, run the following command:
+To start watching a snippet directory and sync the changes to PDFMonkey, run the following command:
 
 ```bash
 pdfmonkey snippet watch
 ```
 
-This will start watching the `code.liquid` file in the **current folder** and sync automatically when changes are detected. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the snippet.
+This will start watching the `code.liquid` file in the **current directory** and sync automatically when changes are detected. The CLI uses the metadata stored in the `.pdfmonkey.json` file to identify the snippet.
 
-To monitor a different folder, simply pass the path as the first argument:
+To monitor a different directory, simply pass the path as the first argument:
 
 ```bash
 pdfmonkey snippet watch <path>
 ```
 
-If for some reason the folder doesn't contain metadata or you want to use a different snippet ID, you can specify it using the `-s` option:
+If for some reason the directory doesn't contain metadata or you want to use a different snippet ID, you can specify it using the `-s` option:
 
 ```bash
 pdfmonkey snippet watch [path] -s <snippet-id>
@@ -232,7 +233,7 @@ The CLI allows you to watch multiple resources (one templates and multiple snipp
 pdfmonkey watch
 ```
 
-This will prompt you to interactively select the folders you want to watch.
+This will prompt you to interactively select the directories you want to watch.
 
 You can also directly specify multiple paths:
 
@@ -240,7 +241,7 @@ You can also directly specify multiple paths:
 pdfmonkey watch path/to/template path/to/snippet
 ```
 
-When watching multiple resources, the command will automatically detect if each folder contains a template or a snippet based on the metadata. Note that **only one template can be watched at a time**, but you can watch multiple snippets alongside it.
+When watching multiple resources, the command will automatically detect if each directory contains a template or a snippet based on the metadata. Note that **only one template can be watched at a time**, but you can watch multiple snippets alongside it.
 
 This combined watch command supports the same options as the `template watch` command:
 
@@ -254,9 +255,40 @@ Besides local edition, the CLI covers the everyday operations on your PDFMonkey 
 
 ### Workspaces
 
+Commands that work within a workspace accept a `-w, --workspace` option taking either the workspace ID or its name. You can also set the `PDFMONKEY_WORKSPACE` environment variable. When none is given in an interactive terminal, the CLI will ask you to pick one.
+
 ```bash
 pdfmonkey whoami          # Check which account the API key belongs to
 pdfmonkey workspace list
+```
+
+### Templates
+
+```bash
+pdfmonkey template list                       # Across all workspaces
+pdfmonkey template list -w "My Workspace"     # In a workspace
+pdfmonkey template list -w "My Workspace" -f Invoices   # In a folder (ID or name), or "none"
+pdfmonkey template get <template-id>          # Use --json to get the full content
+
+pdfmonkey template create -w "My Workspace" -n "Invoice" --from ./invoice
+pdfmonkey template create -w "My Workspace" -n "Invoice" --mode builder --folder Invoices
+pdfmonkey template update <template-id> --from ./invoice
+pdfmonkey template update <template-id> -n "New name" --folder none
+pdfmonkey template publish <template-id>
+pdfmonkey template delete <template-id>
+```
+
+`--from` reads the content from a local template directory (`body.html.liquid`, `styles.scss` and `sample_data.json`), the same layout used by `init` and `watch`. When creating a template, the directory is linked to the new template so you can `watch` it right away.
+
+Like in the dashboard, changes are saved as a draft: use `publish` to make them live.
+
+### Folders
+
+```bash
+pdfmonkey folder list -w "My Workspace"
+pdfmonkey folder create -w "My Workspace" -n "Invoices"
+pdfmonkey folder rename <folder-id> "Quotes"
+pdfmonkey folder delete <folder-id>
 ```
 
 ## Scripting and AI agents
@@ -264,11 +296,13 @@ pdfmonkey workspace list
 The CLI is designed to be used by scripts and LLM-based agents as well as humans:
 
 - Every command accepts `--json` to output raw JSON, e.g. `pdfmonkey workspace list --json | jq '.[].id'`.
+- Commands never prompt when all required options are given. Without a terminal, missing information is an error rather than a prompt.
+- Deletions require `-y, --yes` when not run in an interactive terminal.
 - Errors are printed on the standard error output and the process exits with a non-zero code.
 
 ## Metadata
 
-The CLI stores metadata in a `.pdfmonkey.json` file within each resource folder. This file contains the resource type and ID, allowing commands to run without explicitly specifying IDs. This metadata is automatically created when initializing resources and used by the watch commands.
+The CLI stores metadata in a `.pdfmonkey.json` file within each resource directory. This file contains the resource type and ID, allowing commands to run without explicitly specifying IDs. This metadata is automatically created when initializing resources and used by the watch commands.
 
 The `.pdfmonkey.json` file looks like this:
 
@@ -284,6 +318,7 @@ The `.pdfmonkey.json` file looks like this:
 Here is a summary of the environment variables that can be set to customize the behavior of the CLI:
 
 - `PDFMONKEY_API_KEY`: The API key to use for authentication.
+- `PDFMONKEY_WORKSPACE`: The default workspace (ID or name).
 - `DIFF`: The diff tool to use.
 - `PAGER`: The pager to use when displaying diffs.
 - `PORT`: The port to run the preview server on.
