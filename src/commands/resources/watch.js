@@ -6,7 +6,7 @@ import { getResourceMetadata } from "../../utils/files.js";
 import templateWatchCommand from "../template/watch.js";
 import snippetWatchCommand from "../snippet/watch.js";
 
-export default async function watchCommand(paths, { apiKey, debug, openBrowser, port, livereloadPort }) {
+export default async function watchCommand(paths, { apiKey, openBrowser, port, livereloadPort }) {
   intro("PDFMonkey Watcher");
 
   const shutdownCallbacks = [];
@@ -54,7 +54,6 @@ export default async function watchCommand(paths, { apiKey, debug, openBrowser, 
   if (template) {
     const templateResult = await templateWatchCommand(template.watchPath, {
       apiKey,
-      debug,
       openBrowser,
       port,
       livereloadPort,
