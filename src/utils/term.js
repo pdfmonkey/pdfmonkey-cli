@@ -7,7 +7,7 @@ import { cancel } from "@clack/prompts";
 // @example
 //
 // ```js
-// gracefullyShutdown(() => {
+// gracefullyShutdownUponCtrlC(() => {
 //   console.log("Shutting down");
 // });
 // ```
