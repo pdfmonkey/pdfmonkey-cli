@@ -2,7 +2,7 @@ import fs from "fs";
 import chalk from "chalk";
 import { confirm, intro, isCancel, log, outro, select, text } from "@clack/prompts";
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { getResourceMetadata } from "../../utils/files.js";
+import { hasMetadata, readMetadata } from "../../utils/files.js";
 import templateWatchCommand from "../template/watch.js";
 import snippetWatchCommand from "../snippet/watch.js";
 
@@ -32,7 +32,7 @@ export default async function watchCommand(paths, { apiKey, openBrowser, port, l
 
   if (paths?.length > 0) {
     paths.forEach((path) => handlePath(path));
-  } else if (isResource(currentDir)) {
+  } else if (hasMetadata(currentDir)) {
     handlePath(currentDir);
   } else {
     do {
@@ -99,10 +99,6 @@ async function continueAdding() {
   });
 }
 
-function isResource(path) {
-  return fs.existsSync(`${path}/.pdfmonkey.json`);
-}
-
 function loadResource(path, templateFound) {
   log.info(`Loading path ${chalk.yellow(path)}`);
 
@@ -111,13 +107,12 @@ function loadResource(path, templateFound) {
     return;
   }
 
-  if (!isResource(path)) {
+  if (!hasMetadata(path)) {
     log.error(`No PDFMonkey metadata found in ${chalk.red(path)}`);
     return;
   }
 
-  const metadata = getResourceMetadata(path);
-  const isTemplate = metadata.type === "template";
+  const isTemplate = readMetadata(path).type === "template";
 
   if (isTemplate && templateFound) {
     log.error("Error: Only one template can be watched at a time");
@@ -138,7 +133,7 @@ function findPDFMonkeyFolders() {
     if (entry.isDirectory()) {
       const dirPath = `${cwd}/${entry.name}`;
 
-      if (isResource(dirPath)) {
+      if (hasMetadata(dirPath)) {
         foundFolders.push(dirPath);
       }
 
@@ -148,7 +143,7 @@ function findPDFMonkeyFolders() {
         if (subEntry.isDirectory()) {
           const subDirPath = `${dirPath}/${subEntry.name}`;
 
-          if (isResource(subDirPath)) {
+          if (hasMetadata(subDirPath)) {
             foundFolders.push(subDirPath);
           }
         }
@@ -206,7 +201,7 @@ async function promptForPath() {
     return null;
   }
 
-  if (!isResource(folderPath)) {
+  if (!hasMetadata(folderPath)) {
     log.error(`No PDFMonkey metadata found in ${chalk.red(folderPath)}`);
     return null;
   }

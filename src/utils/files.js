@@ -5,7 +5,9 @@ import { exec } from "child_process";
 import { confirm, isCancel, log } from "@clack/prompts";
 import { cancelOperation } from "./term.js";
 
-export const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
+export const UUID_PATTERN = /^[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}$/i;
+
+const METADATA_FILE = ".pdfmonkey.json";
 
 // Local files of a template, keyed by the draft attribute they hold.
 export const TEMPLATE_FILES = {
@@ -62,27 +64,28 @@ export function fileUpdatedAt(path, filename) {
   return fs.statSync(`${path}/${filename}`).mtime;
 }
 
-// Retrieves resource metadata from the .pdfmonkey.json file.
+// Whether a directory is linked to a PDFMonkey resource.
 //
 // @param {string} path - Path to the resource directory
 //
-// @returns {object|null} The resource metadata or null if not found/invalid
-export function getResourceMetadata(path) {
-  try {
-    if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
-      const metadata = JSON.parse(readFile(path, ".pdfmonkey.json"));
+// @returns {boolean}
+export function hasMetadata(path) {
+  return fs.existsSync(nodePath.join(path, METADATA_FILE));
+}
 
-      if (metadata && metadata.type && metadata.id) {
-        return metadata;
-      }
-    }
-  } catch (error) {
-    log.error(`Error parsing metadata for ${chalk.yellow(path)}: ${error.message}`);
-    return null;
+// Reads the resource metadata from the .pdfmonkey.json file.
+//
+// @param {string} path - Path to the resource directory
+//
+// @returns {object} The resource metadata ({ type, id })
+export function readMetadata(path) {
+  const metadata = JSON.parse(readFile(path, METADATA_FILE));
+
+  if (!metadata?.type || !metadata?.id) {
+    throw new Error(`Invalid metadata in ${nodePath.join(path, METADATA_FILE)}`);
   }
 
-  log.error(`No proper metadata found for ${chalk.yellow(path)}`);
-  return null;
+  return metadata;
 }
 
 // Gets the resource ID from the .pdfmonkey.json file or from parameters.
@@ -93,16 +96,14 @@ export function getResourceMetadata(path) {
 //
 // @returns {string} The resource ID
 export function getResourceId(type, resourceId, path) {
-  if (fs.existsSync(`${path}/.pdfmonkey.json`)) {
-    const json = readFile(path, ".pdfmonkey.json");
-    const { id } = JSON.parse(json);
-    return id;
+  if (hasMetadata(path)) {
+    return readMetadata(path).id;
   }
 
   const id = resourceId ?? nodePath.basename(path);
 
   // Only write metadata for proper UUIDs
-  if (id.match(UUID_PATTERN)) {
+  if (UUID_PATTERN.test(id)) {
     writeMetadata(type, id, path);
   }
 
@@ -166,7 +167,7 @@ export function sanitizeIdentifier(identifier) {
 //
 // @returns {void}
 export function writeMetadata(type, id, path) {
-  writeFile(path, ".pdfmonkey.json", JSON.stringify({ type, id }, {}, 2));
+  writeFile(path, METADATA_FILE, JSON.stringify({ type, id }, {}, 2));
 }
 
 // Writes snippet content to the code.liquid file.
