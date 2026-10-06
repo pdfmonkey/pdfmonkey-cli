@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.0.0 (2026-10-13)
 
 - Adding `workspace list` and `whoami` commands
 - Adding `--json` output for scripts and AI agents
