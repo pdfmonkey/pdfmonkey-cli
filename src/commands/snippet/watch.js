@@ -3,7 +3,7 @@ import { intro, outro, log } from "@clack/prompts";
 
 import { getResourceId } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { getSnippet, updateSnippet } from "../../utils/pdfmonkey.js";
+import { getClient, updateSnippet } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
@@ -16,7 +16,7 @@ export default async function watchCommand(
   const introMessage = `Starting snippet sync for ${chalk.yellow(snippetId)}`;
   wrapped ? log.info(introMessage) : intro(introMessage);
 
-  const snippet = await getSnippet(snippetId, apiKey);
+  const snippet = await getClient(apiKey).snippets.get(snippetId);
 
   if (!(await handleConflicts(snippet, path))) {
     if (wrapped) {
@@ -45,7 +45,7 @@ export default async function watchCommand(
   }
 }
 
-export async function handleConflicts(snippet, path) {
+async function handleConflicts(snippet, path) {
   const { code } = snippet;
   const updated_at = new Date(snippet.updated_at).toISOString();
 
