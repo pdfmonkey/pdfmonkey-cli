@@ -1,7 +1,6 @@
 import { intro, isCancel, log, outro, select, text } from "@clack/prompts";
 import chalk from "chalk";
 import nodePath from "path";
-import shellescape from "shell-escape";
 import { avoidConflicts, ensurePathPresent, openEditor, writeMetadata } from "../../utils/files.js";
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 
@@ -66,11 +65,8 @@ async function askForPath(type, resource, pathCandidates) {
 }
 
 function printWatchCommand(type, path) {
-  let watchCommand = ["pdfmonkey", "watch", path];
+  const quotedPath = /^[\w@%+=:,./-]+$/.test(path) ? path : `'${path.replaceAll("'", "'\\''")}'`;
+  const apiKeyArgs = process.env.PDFMONKEY_API_KEY ? "" : " -k YOUR_API_KEY";
 
-  if (!process.env.PDFMONKEY_API_KEY) {
-    watchCommand = [...watchCommand, "-k", "YOUR_API_KEY"];
-  }
-
-  log.info(`Watch your ${type} using: ${shellescape(watchCommand)}`);
+  log.info(`Watch your ${type} using: pdfmonkey watch ${quotedPath}${apiKeyArgs}`);
 }
