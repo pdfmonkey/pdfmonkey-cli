@@ -4,7 +4,7 @@ import { intro, outro, log } from "@clack/prompts";
 
 import { getResourceId, TEMPLATE_FILES } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { getTemplate, updateTemplate } from "../../utils/pdfmonkey.js";
+import { getClient, updateTemplate } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
 import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
@@ -18,7 +18,7 @@ export default async function watchCommand(
   const introMessage = `Starting template sync for ${chalk.yellow(templateId)}`;
   wrapped ? log.info(introMessage) : intro(introMessage);
 
-  const template = await getTemplate(templateId, apiKey);
+  const template = await getClient(apiKey).documentTemplates.get(templateId);
 
   if (!(await handleConflicts(template, path))) {
     if (wrapped) {

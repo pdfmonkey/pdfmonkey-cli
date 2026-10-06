@@ -5,16 +5,24 @@ import shellescape from "shell-escape";
 import { avoidConflicts, ensurePathPresent, openEditor, writeMetadata } from "../../utils/files.js";
 import { cancelOperation, gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 
-export async function initResource(resourceInfo) {
-  let path = resourceInfo.path;
-  const { type, fetch, displayName, write, edit, pathCandidates } = resourceInfo;
-  const resource = await fetch();
-
-  intro(`Initializing ${type} ${chalk.yellow(displayName(resource))}`);
+// Writes a resource to a local directory and links it to PDFMonkey.
+//
+// @param {object} options
+// @param {string} options.type - The resource type (template, snippet)
+// @param {object} options.resource - The resource to write
+// @param {string} options.label - The name of the resource, for display
+// @param {string} [options.path] - Where to write it (default: asked interactively)
+// @param {boolean} [options.edit] - Whether to open the editor afterwards
+// @param {array} options.pathCandidates - Paths to suggest, relative to the current directory
+// @param {Function} options.write - Writes the resource content, (resource, path) => void
+//
+// @returns {Promise<void>}
+export async function initResource({ type, resource, label, path, edit, pathCandidates, write }) {
+  intro(`Initializing ${type} ${chalk.yellow(label)}`);
 
   gracefullyShutdownUponCtrlC(cancelOperation);
 
-  path ??= await askForPath(resource, pathCandidates);
+  path ??= await askForPath(type, resource, pathCandidates);
 
   ensurePathPresent(path);
   await avoidConflicts(path);
@@ -32,17 +40,17 @@ export async function initResource(resourceInfo) {
   outro("Bye!");
 }
 
-async function askForPath(resource, pathCandidates) {
-  let currentDir = process.cwd();
-  let defaultPath = nodePath.join(currentDir, resource.id);
-  const candidates = [defaultPath, ...pathCandidates(currentDir, resource)];
+async function askForPath(type, resource, pathCandidates) {
+  const currentDir = process.cwd();
+  const defaultPath = nodePath.join(currentDir, resource.id);
+  const candidates = [defaultPath, ...pathCandidates.map((candidate) => nodePath.join(currentDir, candidate))];
 
-  const pathOptions = candidates.filter(Boolean).map((candidate) => ({ value: candidate, label: candidate }));
+  const pathOptions = candidates.map((candidate) => ({ value: candidate, label: candidate }));
   pathOptions.push({ value: currentDir, label: currentDir });
   pathOptions.push({ value: "custom", label: "A custom path" });
 
   let path = await select({
-    message: `Where should the ${resource.type} code be saved?`,
+    message: `Where should the ${type} code be saved?`,
     options: pathOptions,
   });
 

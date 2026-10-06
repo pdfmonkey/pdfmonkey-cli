@@ -1,83 +1,37 @@
-import chalk from "chalk";
 import nodePath from "path";
-import { intro, isCancel, outro, select } from "@clack/prompts";
 
-import { writeTemplateContent } from "../../utils/files.js";
-import { getTemplate, getTemplateCard, getTemplateCards } from "../../utils/pdfmonkey.js";
-import { cancelOperation } from "../../utils/term.js";
+import { sanitizeIdentifier, writeTemplateContent } from "../../utils/files.js";
+import { getTemplateCards, getTemplateWithFolder } from "../../utils/pdfmonkey.js";
 import { initResource } from "../shared/init.js";
-import { pickWorkspace } from "../shared/workspace.js";
+import { pickOne, pickWorkspace } from "../shared/pick.js";
 
 export default async function initCommand(templateId, path, { apiKey, edit }) {
+  templateId ??= (await pickTemplate(apiKey)).id;
+  const template = await getTemplateWithFolder(templateId, apiKey);
+
   return await initResource({
-    id: templateId,
     type: "template",
+    resource: template,
+    label: templateLabel(template),
     path,
     edit,
-    displayName: (template) => template.display_name,
-    fetch: () => fetchTemplate(templateId, apiKey),
-    pathCandidates,
-    write: (templateCard, path) => write(templateCard, path, apiKey),
+    pathCandidates: pathCandidates(template),
+    write: writeTemplateContent,
   });
 }
 
-async function fetchTemplate(templateId, apiKey) {
-  return templateId ? await getTemplateCard(templateId, apiKey) : await runTemplateSelection(apiKey);
-}
-
-function pathCandidates(currentDir, templateCard) {
-  const candidates = [nodePath.join(currentDir, templateCard.sanitized_identifier)];
-
-  if (templateCard.sanitized_folder_identifier) {
-    candidates.push(
-      nodePath.join(currentDir, templateCard.sanitized_folder_identifier, templateCard.id),
-      nodePath.join(currentDir, templateCard.sanitized_folder_identifier, templateCard.sanitized_identifier),
-    );
-  }
-
-  return candidates;
-}
-
-async function pickTemplate(workspaceId, apiKey) {
-  intro("Fetching templates...");
-
-  let selectedTemplate;
-  const templates = await getTemplateCards(workspaceId, apiKey);
-
-  if (!templates || templates.length === 0) {
-    outro("No templates found");
-    cancelOperation();
-  }
-
-  if (templates.length === 1) {
-    selectedTemplate = templates[0];
-  } else {
-    selectedTemplate = await select({
-      message: "Select a template",
-      options: templates.map((template) => ({
-        value: template,
-        label: template.display_name,
-      })),
-    });
-  }
-
-  if (isCancel(selectedTemplate)) {
-    cancelOperation();
-  }
-
-  outro(`Using template: ${chalk.yellow(selectedTemplate.display_name)}`);
-
-  return selectedTemplate;
-}
-
-async function runTemplateSelection(apiKey) {
+async function pickTemplate(apiKey) {
   const workspaceId = await pickWorkspace(apiKey);
-  const templateInfo = await pickTemplate(workspaceId, apiKey);
-
-  return templateInfo;
+  return pickOne("template", () => getTemplateCards(workspaceId, apiKey), templateLabel);
 }
 
-async function write(templateCard, path, apiKey) {
-  const template = await getTemplate(templateCard.id, apiKey);
-  writeTemplateContent(template, path);
+function templateLabel(template) {
+  return [template.template_folder_identifier, template.identifier].filter(Boolean).join(" / ");
+}
+
+function pathCandidates(template) {
+  const name = sanitizeIdentifier(template.identifier);
+  const folder = sanitizeIdentifier(template.template_folder_identifier);
+
+  return folder ? [name, nodePath.join(folder, template.id), nodePath.join(folder, name)] : [name];
 }
