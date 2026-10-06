@@ -1,4 +1,3 @@
-import { log } from "@clack/prompts";
 import { APIError, PDFMonkey } from "pdfmonkey";
 import { readFile, sanitizeIdentifier } from "./files.js";
 import { attributeNames } from "./constants.js";
@@ -28,7 +27,7 @@ export function getClient(apiKey) {
 // @param {object|array} errors - Error object or array from API
 //
 // @returns {string} Formatted error message
-export function formatErrors(errors) {
+function formatErrors(errors) {
   if (Array.isArray(errors)) {
     return errors.map((error) => `${error.status} ${error.title} — ${error.detail}`).join("\n");
   }
@@ -51,16 +50,6 @@ export function describeError(error) {
   return error.message;
 }
 
-// Logs API errors and returns null instead of throwing, for interactive commands.
-async function orNull(promise) {
-  try {
-    return await promise;
-  } catch (error) {
-    log.error(describeError(error));
-    return null;
-  }
-}
-
 // Gets a template from PDFMonkey API.
 //
 // @param {string} templateId - The ID of the template to get
@@ -68,7 +57,7 @@ async function orNull(promise) {
 //
 // @returns {Promise<object>} The template
 export async function getTemplate(templateId, apiKey) {
-  return orNull(getClient(apiKey).documentTemplates.get(templateId));
+  return getClient(apiKey).documentTemplates.get(templateId);
 }
 
 // Reads the template content from local files.
@@ -90,14 +79,9 @@ export function readTemplateContent(path) {
 // @param {string} apiKey - The API key to use
 // @param {string} path - The path to the template directory
 //
-// @returns {Promise<object>} Result object with success status and template or formatted errors
+// @returns {Promise<object>} The updated template
 export async function updateTemplate(templateId, apiKey, path) {
-  try {
-    const template = await getClient(apiKey).documentTemplates.update(templateId, readTemplateContent(path));
-    return { success: true, template };
-  } catch (error) {
-    return { success: false, errors: describeError(error) };
-  }
+  return getClient(apiKey).documentTemplates.update(templateId, readTemplateContent(path));
 }
 
 // Fetches all workspaces from PDFMonkey API.
@@ -120,10 +104,6 @@ export async function getWorkspaces(apiKey) {
 // @returns {Promise<object>} The processed template card
 export async function getTemplateCard(templateId, apiKey) {
   const template = await getTemplate(templateId, apiKey);
-  if (!template) {
-    return null;
-  }
-
   let template_folder_identifier = null;
 
   if (template.template_folder_id) {
@@ -183,8 +163,7 @@ function buildTemplateCard(templateCard) {
 //
 // @returns {Promise<object>} The processed snippet
 export async function getSnippet(snippetId, apiKey) {
-  const snippet = await orNull(getClient(apiKey).snippets.get(snippetId));
-  return snippet && buildSnippet(snippet);
+  return buildSnippet(await getClient(apiKey).snippets.get(snippetId));
 }
 
 // Fetches all snippets from PDFMonkey API for a specific workspace.
@@ -225,12 +204,7 @@ function buildSnippet(snippet) {
 // @param {string} apiKey - The API key to use
 // @param {string} path - The path to the snippet directory
 //
-// @returns {Promise<object>} Result object with success status and snippet or formatted errors
+// @returns {Promise<object>} The updated snippet
 export async function updateSnippet(snippetId, apiKey, path) {
-  try {
-    const snippet = await getClient(apiKey).snippets.update(snippetId, { code: readFile(path, "code.liquid") });
-    return { success: true, snippet };
-  } catch (error) {
-    return { success: false, errors: describeError(error) };
-  }
+  return getClient(apiKey).snippets.update(snippetId, { code: readFile(path, "code.liquid") });
 }
