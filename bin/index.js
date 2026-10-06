@@ -37,6 +37,16 @@ const livereloadPortArgs = [
   process.env.LIVE_RELOAD_PORT || 2082,
 ];
 
+const templateFromArgs = [
+  "--from <path>",
+  "A local template directory to read the content from (body.html.liquid, styles.scss, sample_data.json)",
+];
+
+const snippetFromArgs = ["--from <path>", "A local snippet directory to read the code from (code.liquid)"];
+
+const outputTypeOption = () =>
+  new Option("--output-type <type>", "The type of file to generate").choices(["pdf", "image"]);
+
 const positiveInteger = (value) => {
   const number = Number(value);
 
@@ -126,12 +136,9 @@ templateCommand
   .option(...workspaceArgs)
   .option("-f, --folder <id|name>", "The folder to put the template in")
   .addOption(new Option("-m, --mode <mode>", "The edition mode").choices(["code", "builder"]).default("code"))
-  .addOption(new Option("--output-type <type>", "The type of file to generate").choices(["pdf", "image"]))
+  .addOption(outputTypeOption())
   .option("--engine <name>", "The PDF engine to use, e.g. v5 (default: latest)")
-  .option(
-    "--from <path>",
-    "A local template directory to read the content from (body.html.liquid, styles.scss, sample_data.json)",
-  )
+  .option(...templateFromArgs)
   .option(...jsonArgs)
   .option(...authArgs)
   .action(run(template.createCommand));
@@ -143,12 +150,9 @@ templateCommand
   .option("-n, --name <name>", "The new name of the template")
   .option("-f, --folder <id|name|none>", "Move the template to this folder, or out of any folder with none")
   .option(...workspaceArgs)
-  .addOption(new Option("--output-type <type>", "The type of file to generate").choices(["pdf", "image"]))
+  .addOption(outputTypeOption())
   .option("--engine <name>", "The PDF engine to use, e.g. v5")
-  .option(
-    "--from <path>",
-    "A local template directory to read the content from (body.html.liquid, styles.scss, sample_data.json)",
-  )
+  .option(...templateFromArgs)
   .option(...jsonArgs)
   .option(...authArgs)
   .action(run(template.updateCommand));
@@ -264,7 +268,7 @@ snippetCommand
   .description("Create a snippet")
   .requiredOption("-n, --name <name>", "The name of the snippet")
   .option(...workspaceArgs)
-  .option("--from <path>", "A local snippet directory to read the code from (code.liquid)")
+  .option(...snippetFromArgs)
   .option(...jsonArgs)
   .option(...authArgs)
   .action(run(snippet.createCommand));
@@ -274,7 +278,7 @@ snippetCommand
   .description("Update a snippet")
   .argument("<snippetId>", "The ID of the snippet")
   .option("-n, --name <name>", "The new name of the snippet")
-  .option("--from <path>", "A local snippet directory to read the code from (code.liquid)")
+  .option(...snippetFromArgs)
   .option(...jsonArgs)
   .option(...authArgs)
   .action(run(snippet.updateCommand));

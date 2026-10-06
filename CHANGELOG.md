@@ -15,6 +15,12 @@
 - Fixing `template init <template-id>` failing to fetch the template
 - Fixing the API key being displayed in the commands help
 - Fixing the template ID missing from metadata when inferred from the folder name
+- Fixing `template init` and `snippet init` crashing after an API error, e.g. with an unknown ID
+- Fixing the `init` path prompt mentioning an `undefined` resource
+- Fixing `watch` looping when cancelling the "add another directory" prompt
+- Fixing `watch` asking to resolve conflicts of several snippets at once
+- Fixing directory names containing an ID being mistaken for an ID
+- Removing the `shell-escape` dependency
 
 ## 1.1.0 (2026-02-03)
 

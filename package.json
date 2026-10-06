@@ -17,7 +17,6 @@
   "bugs": {
     "url": "https://github.com/pdfmonkey/pdfmonkey-cli/issues"
   },
-  "main": "index.js",
   "author": "Simon Courtois",
   "license": "MIT",
   "scripts": {
@@ -34,8 +33,7 @@
     "commander": "^15.0.0",
     "livereload": "^0.10.3",
     "open": "^11.0.4",
-    "pdfmonkey": "^1.4.0",
-    "shell-escape": "^0.2.0"
+    "pdfmonkey": "^1.4.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
