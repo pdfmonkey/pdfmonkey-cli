@@ -18,10 +18,7 @@ export default async function watchCommand(
   const introMessage = `Starting template sync for ${chalk.yellow(templateId)}`;
   wrapped ? log.info(introMessage) : intro(introMessage);
 
-  let template = await getTemplate(templateId, apiKey);
-  if (!template) {
-    process.exit(1);
-  }
+  const template = await getTemplate(templateId, apiKey);
 
   if (!(await handleConflicts(template, path))) {
     if (wrapped) {
@@ -40,14 +37,8 @@ export default async function watchCommand(
   });
 
   watchFiles(path, async () => {
-    let update = await updateTemplate(templateId, apiKey, path);
-
-    if (update.success) {
-      previewUrl = update.template.preview_url;
-      liveReloadServer.refresh("/");
-    }
-
-    return update;
+    previewUrl = (await updateTemplate(templateId, apiKey, path)).preview_url;
+    liveReloadServer.refresh("/");
   });
 
   if (openBrowser) {

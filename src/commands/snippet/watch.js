@@ -16,10 +16,7 @@ export default async function watchCommand(
   const introMessage = `Starting snippet sync for ${chalk.yellow(snippetId)}`;
   wrapped ? log.info(introMessage) : intro(introMessage);
 
-  let snippet = await getSnippet(snippetId, apiKey);
-  if (!snippet) {
-    process.exit(1);
-  }
+  const snippet = await getSnippet(snippetId, apiKey);
 
   if (!(await handleConflicts(snippet, path))) {
     if (wrapped) {
@@ -31,16 +28,12 @@ export default async function watchCommand(
   }
 
   watchFiles(path, async () => {
-    let update = await updateSnippet(snippetId, apiKey, path);
+    await updateSnippet(snippetId, apiKey, path);
 
-    if (update.success) {
-      if (templateLiveReloadServer) {
-        templateLiveReloadServer.refresh("/");
-        log.info("Template preview refreshed");
-      }
+    if (templateLiveReloadServer) {
+      templateLiveReloadServer.refresh("/");
+      log.info("Template preview refreshed");
     }
-
-    return update;
   });
 
   if (wrapped) {
