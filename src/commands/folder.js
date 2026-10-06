@@ -1,11 +1,11 @@
 import { confirmDestruction, formatDate, output, printTable, resolveWorkspace } from "../utils/cli.js";
-import { getClient } from "../utils/pdfmonkey.js";
+import { byIdentifier, getClient } from "../utils/pdfmonkey.js";
 
 export async function listCommand(options) {
   const workspaceId = await resolveWorkspace(options.workspace, options.apiKey);
   const folders = await getClient(options.apiKey).templateFolders.listAll({ workspace_id: workspaceId });
 
-  folders.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+  folders.sort(byIdentifier);
 
   output(folders, options, () =>
     printTable(folders, [
