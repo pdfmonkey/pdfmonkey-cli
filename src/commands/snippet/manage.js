@@ -15,7 +15,7 @@ export async function listCommand(options) {
   const snippets = await getSnippets(workspaceId, options.apiKey, options.search);
 
   // eslint-disable-next-line no-unused-vars
-  const rows = snippets.map(({ code, display_name, sanitized_identifier, ...rest }) => rest);
+  const rows = snippets.map(({ code, ...rest }) => rest);
 
   output(rows, options, () =>
     printTable(rows, [

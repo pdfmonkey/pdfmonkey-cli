@@ -5,7 +5,7 @@ import { confirm, isCancel } from "@clack/prompts";
 import { UUID_PATTERN } from "./files.js";
 import { describeError, getClient, getWorkspaces } from "./pdfmonkey.js";
 import { cancelOperation } from "./term.js";
-import { pickWorkspace } from "../commands/shared/workspace.js";
+import { pickWorkspace } from "../commands/shared/pick.js";
 
 // Wraps a command action so errors are printed nicely and the process exits with a non-zero code.
 //

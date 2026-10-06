@@ -18,8 +18,8 @@ export async function listCommand(options) {
   const folders = await resolveFolder(folder, () => workspaceId, apiKey);
   const templates = await getTemplateCards(workspaceId, apiKey, folders);
 
-  output(templates.map(withoutLocalAttributes), options, (rows) =>
-    printTable(rows, [
+  output(templates, options, () =>
+    printTable(templates, [
       ["ID", (template) => template.id],
       ["FOLDER", (template) => template.template_folder_identifier],
       ["NAME", (template) => template.identifier],
@@ -132,11 +132,4 @@ function printTemplate(template) {
     ["Updated", formatDate(template.updated_at)],
     ["Preview URL", template.preview_url],
   ]);
-}
-
-// Drops the attributes only used by the CLI to build local paths
-function withoutLocalAttributes(template) {
-  // eslint-disable-next-line no-unused-vars
-  const { display_name, sanitized_identifier, sanitized_folder_identifier, ...rest } = template;
-  return rest;
 }

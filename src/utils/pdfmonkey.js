@@ -1,5 +1,5 @@
 import { APIError, PDFMonkey } from "pdfmonkey";
-import { readFile, readTemplateContent, sanitizeIdentifier } from "./files.js";
+import { readFile, readTemplateContent } from "./files.js";
 import packageConfig from "../../package.json" with { type: "json" };
 
 const userAgent = `PDFMonkey CLI/${packageConfig.version}`;
@@ -58,16 +58,6 @@ export function describeError(error) {
   return error.message;
 }
 
-// Gets a template from PDFMonkey API.
-//
-// @param {string} templateId - The ID of the template to get
-// @param {string} apiKey - The API key to use
-//
-// @returns {Promise<object>} The template
-export async function getTemplate(templateId, apiKey) {
-  return getClient(apiKey).documentTemplates.get(templateId);
-}
-
 // Updates a template on PDFMonkey API.
 //
 // @param {string} templateId - The ID of the template to update
@@ -89,24 +79,18 @@ export async function getWorkspaces(apiKey) {
   return workspaces.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
 }
 
-// Fetches a single template card from PDFMonkey API.
-//
-// There is no API endpoint for a single template card, so it is rebuilt from the template.
+// Fetches a template along with the name of its folder, like template cards have.
 //
 // @param {string} templateId - The ID of the template to fetch
 // @param {string} apiKey - The API key to use
 //
-// @returns {Promise<object>} The processed template card
-export async function getTemplateCard(templateId, apiKey) {
-  const template = await getTemplate(templateId, apiKey);
-  let template_folder_identifier = null;
+// @returns {Promise<object>} The template, with its template_folder_identifier
+export async function getTemplateWithFolder(templateId, apiKey) {
+  const client = getClient(apiKey);
+  const template = await client.documentTemplates.get(templateId);
+  const folder = template.template_folder_id && (await client.templateFolders.get(template.template_folder_id));
 
-  if (template.template_folder_id) {
-    const folder = await getClient(apiKey).templateFolders.get(template.template_folder_id);
-    template_folder_identifier = folder.identifier;
-  }
-
-  return buildTemplateCard({ ...template, template_folder_identifier });
+  return { ...template, template_folder_identifier: folder?.identifier ?? null };
 }
 
 // Fetches all template cards from PDFMonkey API.
@@ -117,8 +101,7 @@ export async function getTemplateCard(templateId, apiKey) {
 //
 // @returns {Promise<array>} The templates, sorted by folder and identifier
 export async function getTemplateCards(workspaceId, apiKey, folders) {
-  const templateCards = await getClient(apiKey).documentTemplates.listAll({ workspace_id: workspaceId, folders });
-  const templates = templateCards.map((templateCard) => buildTemplateCard(templateCard));
+  const templates = await getClient(apiKey).documentTemplates.listAll({ workspace_id: workspaceId, folders });
 
   return templates.sort((a, b) => {
     const folderA = a.template_folder_identifier || "";
@@ -134,33 +117,6 @@ export async function getTemplateCards(workspaceId, apiKey, folders) {
   });
 }
 
-// Adds sanitized identifiers to template card data.
-//
-// @param {object} templateCard - Template card data from API
-//
-// @returns {object} Template card with added sanitized identifiers and display name
-function buildTemplateCard(templateCard) {
-  const sanitized_identifier = sanitizeIdentifier(templateCard.identifier);
-  const sanitized_folder_identifier = sanitizeIdentifier(templateCard.template_folder_identifier);
-
-  return {
-    ...templateCard,
-    display_name: [templateCard.template_folder_identifier, templateCard.identifier].filter(Boolean).join(" / "),
-    sanitized_identifier,
-    sanitized_folder_identifier,
-  };
-}
-
-// Fetches a single snippet from PDFMonkey API.
-//
-// @param {string} snippetId - The ID of the snippet to fetch
-// @param {string} apiKey - The API key to use
-//
-// @returns {Promise<object>} The processed snippet
-export async function getSnippet(snippetId, apiKey) {
-  return buildSnippet(await getClient(apiKey).snippets.get(snippetId));
-}
-
 // Fetches all snippets from PDFMonkey API for a specific workspace.
 //
 // @param {string} workspaceId - The ID of the workspace
@@ -174,23 +130,7 @@ export async function getSnippets(workspaceId, apiKey, search) {
   // The SDK has no search filter, but all snippets are fetched anyway
   return snippets
     .filter((snippet) => !search || snippet.identifier.toLowerCase().includes(search.toLowerCase()))
-    .map((snippet) => buildSnippet(snippet))
     .sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
-}
-
-// Adds sanitized identifier to snippet data.
-//
-// @param {object} snippet - Snippet data from API
-//
-// @returns {object} Snippet with added sanitized identifier and display name
-function buildSnippet(snippet) {
-  const sanitized_identifier = sanitizeIdentifier(snippet.identifier);
-
-  return {
-    ...snippet,
-    display_name: snippet.identifier,
-    sanitized_identifier,
-  };
 }
 
 // Updates a snippet on PDFMonkey API.
