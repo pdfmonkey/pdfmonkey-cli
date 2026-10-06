@@ -3,6 +3,7 @@ import { readFile, readTemplateContent } from "./files.js";
 import packageConfig from "../../package.json" with { type: "json" };
 
 const userAgent = `PDFMonkey CLI/${packageConfig.version}`;
+const collator = new Intl.Collator(undefined, { sensitivity: "base" });
 
 // Human-readable names of the attributes the API reports errors on.
 const attributeNames = {
@@ -28,6 +29,13 @@ export function getClient(apiKey) {
   });
 
   return client;
+}
+
+// Sorts API items by identifier, ignoring case.
+//
+// @example items.sort(byIdentifier)
+export function byIdentifier(a, b) {
+  return collator.compare(a.identifier, b.identifier);
 }
 
 // Formats error objects into readable strings.
@@ -76,7 +84,7 @@ export async function updateTemplate(templateId, apiKey, path) {
 // @returns {Promise<array>} The workspaces, sorted by identifier
 export async function getWorkspaces(apiKey) {
   const workspaces = await getClient(apiKey).workspaceCards.listAll();
-  return workspaces.sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+  return workspaces.sort(byIdentifier);
 }
 
 // Fetches a template along with the name of its folder, like template cards have.
@@ -103,18 +111,13 @@ export async function getTemplateWithFolder(templateId, apiKey) {
 export async function getTemplateCards(workspaceId, apiKey, folders) {
   const templates = await getClient(apiKey).documentTemplates.listAll({ workspace_id: workspaceId, folders });
 
-  return templates.sort((a, b) => {
-    const folderA = a.template_folder_identifier || "";
-    const folderB = b.template_folder_identifier || "";
-
-    if (folderA === "" && folderB !== "") return -1;
-    if (folderA !== "" && folderB === "") return 1;
-
-    const folderComparison = folderA.toLowerCase().localeCompare(folderB.toLowerCase());
-    if (folderComparison !== 0) return folderComparison;
-
-    return a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase());
-  });
+  // Templates outside of any folder first
+  return templates.sort(
+    (a, b) =>
+      Boolean(a.template_folder_identifier) - Boolean(b.template_folder_identifier) ||
+      collator.compare(a.template_folder_identifier ?? "", b.template_folder_identifier ?? "") ||
+      byIdentifier(a, b),
+  );
 }
 
 // Fetches all snippets from PDFMonkey API for a specific workspace.
@@ -130,7 +133,7 @@ export async function getSnippets(workspaceId, apiKey, search) {
   // The SDK has no search filter, but all snippets are fetched anyway
   return snippets
     .filter((snippet) => !search || snippet.identifier.toLowerCase().includes(search.toLowerCase()))
-    .sort((a, b) => a.identifier.toLowerCase().localeCompare(b.identifier.toLowerCase()));
+    .sort(byIdentifier);
 }
 
 // Updates a snippet on PDFMonkey API.
