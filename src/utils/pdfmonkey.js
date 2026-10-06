@@ -1,9 +1,17 @@
 import { APIError, PDFMonkey } from "pdfmonkey";
-import { readFile, sanitizeIdentifier } from "./files.js";
-import { attributeNames } from "./constants.js";
+import { readFile, readTemplateContent, sanitizeIdentifier } from "./files.js";
 import packageConfig from "../../package.json" with { type: "json" };
 
 const userAgent = `PDFMonkey CLI/${packageConfig.version}`;
+
+// Human-readable names of the attributes the API reports errors on.
+const attributeNames = {
+  body_draft: "HTML",
+  code: "Code",
+  scss_style_draft: "CSS",
+  sample_data_draft: "Sample Data",
+  settings_draft: "Settings",
+};
 let client;
 
 // Returns the (memoized) PDFMonkey SDK client.
@@ -58,19 +66,6 @@ export function describeError(error) {
 // @returns {Promise<object>} The template
 export async function getTemplate(templateId, apiKey) {
   return getClient(apiKey).documentTemplates.get(templateId);
-}
-
-// Reads the template content from local files.
-//
-// @param {string} path - Path to the template directory
-//
-// @returns {object} The draft attributes of the template
-export function readTemplateContent(path) {
-  return {
-    body_draft: readFile(path, "body.html.liquid"),
-    scss_style_draft: readFile(path, "styles.scss"),
-    sample_data_draft: readFile(path, "sample_data.json"),
-  };
 }
 
 // Updates a template on PDFMonkey API.
