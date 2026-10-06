@@ -4,7 +4,6 @@ import { execSync } from "child_process";
 import { isCancel, log, select } from "@clack/prompts";
 
 import { fileUpdatedAt, readFile, writeFile } from "./files.js";
-import { fileToAttributeName } from "./constants.js";
 
 // Handles conflicts between local and remote versions of a file.
 //
@@ -17,14 +16,13 @@ import { fileToAttributeName } from "./constants.js";
 export async function handleConflict(remoteData, remoteUpdatedAt, path, filename) {
   const localData = readFile(path, filename);
   const localUpdatedAt = fileUpdatedAt(path, filename);
-  const attributeName = fileToAttributeName[filename];
 
   if ((remoteData ?? "") === (localData ?? "")) {
     return true;
   }
 
   log.warn(
-    `Conflict detected for ${attributeName}\n` +
+    `Conflict detected for ${filename}\n` +
       `Remote content updated at ${remoteUpdatedAt}\n` +
       `Local content updated at ${localUpdatedAt}`,
   );
@@ -44,13 +42,13 @@ export async function handleConflict(remoteData, remoteUpdatedAt, path, filename
     }
 
     if (choice === "local") {
-      log.info(`Using local content for ${attributeName}`);
+      log.info(`Using local content for ${filename}`);
       return true;
     }
 
     if (choice === "remote") {
       writeFile(path, filename, remoteData);
-      log.info(`Using remote content for ${attributeName}`);
+      log.info(`Using remote content for ${filename}`);
       return true;
     }
 

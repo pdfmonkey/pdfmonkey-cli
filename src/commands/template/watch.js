@@ -2,7 +2,7 @@ import chalk from "chalk";
 import open from "open";
 import { intro, outro, log } from "@clack/prompts";
 
-import { getResourceId } from "../../utils/files.js";
+import { getResourceId, TEMPLATE_FILES } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
 import { getTemplate, updateTemplate } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
@@ -66,24 +66,13 @@ export default async function watchCommand(
   }
 }
 
-export async function handleConflicts(template, path) {
-  const { body_draft, scss_style_draft, sample_data_draft } = template;
-  const updated_at = new Date(template.updated_at).toISOString();
-  let conflictHandled;
+async function handleConflicts(template, path) {
+  const updatedAt = new Date(template.updated_at).toISOString();
 
-  conflictHandled = await handleConflict(body_draft, updated_at, path, "body.html.liquid");
-  if (!conflictHandled) {
-    return false;
-  }
-
-  conflictHandled = await handleConflict(scss_style_draft, updated_at, path, "styles.scss");
-  if (!conflictHandled) {
-    return false;
-  }
-
-  conflictHandled = await handleConflict(sample_data_draft, updated_at, path, "sample_data.json");
-  if (!conflictHandled) {
-    return false;
+  for (const [attribute, filename] of Object.entries(TEMPLATE_FILES)) {
+    if (!(await handleConflict(template[attribute], updatedAt, path, filename))) {
+      return false;
+    }
   }
 
   return true;

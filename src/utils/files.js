@@ -7,6 +7,13 @@ import { cancelOperation } from "./term.js";
 
 export const UUID_PATTERN = /[a-z0-9]{8}(?:-[a-z0-9]{4}){4}[a-z0-9]{8}/i;
 
+// Local files of a template, keyed by the draft attribute they hold.
+export const TEMPLATE_FILES = {
+  body_draft: "body.html.liquid",
+  scss_style_draft: "styles.scss",
+  sample_data_draft: "sample_data.json",
+};
+
 // Checks if there are already files in the specified path and asks for confirmation to overwrite.
 //
 // @param {string} path - Directory path to check
@@ -173,6 +180,17 @@ export function writeSnippetContent(snippet, path) {
   writeFile(path, "code.liquid", snippet.code);
 }
 
+// Reads the template content from local files.
+//
+// @param {string} path - Path to the template directory
+//
+// @returns {object} The draft attributes of the template
+export function readTemplateContent(path) {
+  return Object.fromEntries(
+    Object.entries(TEMPLATE_FILES).map(([attribute, filename]) => [attribute, readFile(path, filename)]),
+  );
+}
+
 // Writes template content to the appropriate files.
 //
 // @param {object} template - The template object containing body, styles, and sample data
@@ -180,12 +198,8 @@ export function writeSnippetContent(snippet, path) {
 //
 // @returns {void}
 export function writeTemplateContent(template, path) {
-  log.info("Writing template body");
-  writeFile(path, "body.html.liquid", template.body_draft);
-
-  log.info("Writing template styles");
-  writeFile(path, "styles.scss", template.scss_style_draft);
-
-  log.info("Writing template sample data");
-  writeFile(path, "sample_data.json", template.sample_data_draft);
+  Object.entries(TEMPLATE_FILES).forEach(([attribute, filename]) => {
+    log.info(`Writing ${filename}`);
+    writeFile(path, filename, template[attribute]);
+  });
 }
