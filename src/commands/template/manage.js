@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import {
   compact,
   confirmDestruction,
@@ -11,7 +9,7 @@ import {
   resolveFolder,
   resolveWorkspace,
 } from "../../utils/cli.js";
-import { readTemplateContent, writeMetadata } from "../../utils/files.js";
+import { hasMetadata, readTemplateContent, writeMetadata } from "../../utils/files.js";
 import { getClient, getTemplateCards } from "../../utils/pdfmonkey.js";
 
 export async function listCommand(options) {
@@ -59,7 +57,7 @@ export async function createCommand(options) {
   );
 
   // Link the local directory to the new template so it can be watched right away
-  if (from && !fs.existsSync(`${from}/.pdfmonkey.json`)) {
+  if (from && !hasMetadata(from)) {
     writeMetadata("template", template.id, from);
   }
 

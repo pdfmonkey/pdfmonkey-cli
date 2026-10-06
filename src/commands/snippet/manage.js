@@ -1,5 +1,3 @@
-import fs from "fs";
-
 import {
   compact,
   confirmDestruction,
@@ -9,7 +7,7 @@ import {
   printTable,
   resolveWorkspace,
 } from "../../utils/cli.js";
-import { readFile, writeMetadata } from "../../utils/files.js";
+import { hasMetadata, readFile, writeMetadata } from "../../utils/files.js";
 import { getClient, getSnippets } from "../../utils/pdfmonkey.js";
 
 export async function listCommand(options) {
@@ -55,7 +53,7 @@ export async function createCommand(options) {
   });
 
   // Link the local directory to the new snippet so it can be watched right away
-  if (from && !fs.existsSync(`${from}/.pdfmonkey.json`)) {
+  if (from && !hasMetadata(from)) {
     writeMetadata("snippet", snippet.id, from);
   }
 
