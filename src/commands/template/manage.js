@@ -11,8 +11,8 @@ import {
   resolveFolder,
   resolveWorkspace,
 } from "../../utils/cli.js";
-import { writeMetadata } from "../../utils/files.js";
-import { getClient, getTemplateCards, readTemplateContent } from "../../utils/pdfmonkey.js";
+import { readTemplateContent, writeMetadata } from "../../utils/files.js";
+import { getClient, getTemplateCards } from "../../utils/pdfmonkey.js";
 
 export async function listCommand(options) {
   const { apiKey, folder } = options;
