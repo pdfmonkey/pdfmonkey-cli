@@ -36,12 +36,8 @@ export default async function watchCommand(
     }
   });
 
-  if (wrapped) {
-    return {
-      shutdownHandler: () => log.info("Shutting down snippet watcher"),
-    };
-  } else {
-    gracefullyShutdownUponCtrlC(() => outro("Shutting down snp"));
+  if (!wrapped) {
+    gracefullyShutdownUponCtrlC(() => outro("Shutting down"));
   }
 }
 
