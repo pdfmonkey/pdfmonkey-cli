@@ -38,10 +38,6 @@ There are two ways to authenticate with the PDFMonkey CLI:
 
 ## Command Structure
 
-PDFMonkey CLI supports two command structures:
-
-### Resource-based Commands (Recommended)
-
 Commands are organized by resource type:
 
 ```bash
@@ -64,19 +60,13 @@ pdfmonkey template init <template-id>
 pdfmonkey tpl init <template-id>
 ```
 
-### Direct Commands (shorthand)
+Common commands also have short aliases: `list` → `ls`, `get` → `show`, `delete` → `rm` and, for documents, `create` → `generate`.
 
-Templates being the most common resource, the CLI also supports direct commands:
+A few commands live at the top level:
 
-```bash
-pdfmonkey init <template-id>
-# is the same as
-pdfmonkey template init <template-id>
-
-pdfmonkey watch <path>
-# is the same as
-pdfmonkey template watch <path>
-```
+- `pdfmonkey init`: initialize several templates and snippets in a row (see [Init Multiple Resources](#init-multiple-resources))
+- `pdfmonkey watch`: watch a template and its snippets together (see [Watch Multiple Resources](#watch-multiple-resources))
+- `pdfmonkey whoami`: show the account the API key belongs to
 
 ## Template Management
 
@@ -226,15 +216,25 @@ If for some reason the directory doesn't contain metadata or you want to use a d
 pdfmonkey snippet watch [path] -s <snippet-id>
 ```
 
+## Init Multiple Resources
+
+To initialize several templates and snippets one after the other, run:
+
+```bash
+pdfmonkey init
+```
+
+For each resource, you will be asked whether it's a template or a snippet, then guided through the same steps as `template init` and `snippet init`. The `-e, --edit` option opens each initialized resource in your editor.
+
 ## Watch Multiple Resources
 
-The CLI allows you to watch multiple resources (one templates and multiple snippets) simultaneously with a single command:
+The CLI allows you to watch multiple resources (one template and multiple snippets) simultaneously with a single command:
 
 ```bash
 pdfmonkey watch
 ```
 
-This will prompt you to interactively select the directories you want to watch.
+If the current directory is a template or snippet directory, it is watched directly. Otherwise, you will be prompted to select the directories to watch among the ones found up to two levels below the current directory.
 
 You can also directly specify multiple paths:
 
@@ -247,7 +247,7 @@ When watching multiple resources, the command will automatically detect if each 
 This combined watch command supports the same options as the `template watch` command:
 
 ```bash
-pdfmonkey watch -D -o -p 2083 -l 2084
+pdfmonkey watch -o -p 2083 -l 2084
 ```
 
 ## Managing resources
@@ -273,6 +273,7 @@ pdfmonkey template get <template-id>          # Use --json to get the full conte
 
 pdfmonkey template create -w "My Workspace" -n "Invoice" --from ./invoice
 pdfmonkey template create -w "My Workspace" -n "Invoice" --mode builder --folder Invoices
+pdfmonkey template create -w "My Workspace" -n "Badge" --output-type image --engine v5
 pdfmonkey template update <template-id> --from ./invoice
 pdfmonkey template update <template-id> -n "New name" --folder none
 pdfmonkey template publish <template-id>
@@ -353,6 +354,7 @@ Here is a summary of the environment variables that can be set to customize the 
 - `PDFMONKEY_API_KEY`: The API key to use for authentication.
 - `PDFMONKEY_WORKSPACE`: The default workspace (ID or name).
 - `PDFMONKEY_API_BASE`: The base URL of the API (default: `https://api.pdfmonkey.io/api/v1`).
+- `EDITOR`: The editor opened by the `-e, --edit` option of `init` commands.
 - `DIFF`: The diff tool to use.
 - `PAGER`: The pager to use when displaying diffs.
 - `PORT`: The port to run the preview server on.
