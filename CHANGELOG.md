@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Restoring the `--debug` option of `watch` commands
+
 ## 2.0.0 (2026-10-13)
 
 - Adding `workspace list` and `whoami` commands

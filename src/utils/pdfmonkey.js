@@ -66,6 +66,22 @@ export function describeError(error) {
   return error.message;
 }
 
+// Gets the template preview URL, or its HTML debug preview URL.
+//
+// @param {object} template - The template
+// @param {string} apiKey - The API key to use
+// @param {boolean} debug - Whether to get the HTML debug preview URL
+//
+// @returns {Promise<string>} The preview URL
+export async function getTemplatePreviewUrl(template, apiKey, debug) {
+  if (!debug) return template.preview_url;
+
+  // The SDK has no resource for this endpoint
+  const { document_template_debug } = await getClient(apiKey).get(`/document_template_debugs/${template.id}`);
+
+  return document_template_debug.url;
+}
+
 // Updates a template on PDFMonkey API.
 //
 // @param {string} templateId - The ID of the template to update

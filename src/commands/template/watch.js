@@ -4,14 +4,14 @@ import { intro, outro, log } from "@clack/prompts";
 
 import { getResourceId, TEMPLATE_FILES } from "../../utils/files.js";
 import { gracefullyShutdownUponCtrlC } from "../../utils/term.js";
-import { getClient, updateTemplate } from "../../utils/pdfmonkey.js";
+import { getClient, getTemplatePreviewUrl, updateTemplate } from "../../utils/pdfmonkey.js";
 import { handleConflict } from "../../utils/conflicts-handling.js";
 import { startWebServer } from "../../utils/web-server.js";
 import { watchFiles } from "../../utils/files-watching.js";
 
 export default async function watchCommand(
   path,
-  { apiKey, openBrowser, port, livereloadPort, templateId, wrapped = false },
+  { apiKey, debug, openBrowser, port, livereloadPort, templateId, wrapped = false },
 ) {
   templateId = getResourceId("template", templateId, path);
 
@@ -29,7 +29,7 @@ export default async function watchCommand(
     }
   }
 
-  let previewUrl = template.preview_url;
+  let previewUrl = await getTemplatePreviewUrl(template, apiKey, debug);
 
   const { server, liveReloadServer } = await startWebServer(port, livereloadPort, {
     templateId: () => template.id,
@@ -37,7 +37,7 @@ export default async function watchCommand(
   });
 
   watchFiles(path, async () => {
-    previewUrl = (await updateTemplate(templateId, apiKey, path)).preview_url;
+    previewUrl = await getTemplatePreviewUrl(await updateTemplate(templateId, apiKey, path), apiKey, debug);
     liveReloadServer.refresh("/");
   });
 

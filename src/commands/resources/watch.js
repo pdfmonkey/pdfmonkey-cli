@@ -8,7 +8,7 @@ import { describeError } from "../../utils/pdfmonkey.js";
 import templateWatchCommand from "../template/watch.js";
 import snippetWatchCommand from "../snippet/watch.js";
 
-export default async function watchCommand(paths, { apiKey, openBrowser, port, livereloadPort }) {
+export default async function watchCommand(paths, { apiKey, debug, openBrowser, port, livereloadPort }) {
   intro("PDFMonkey Watcher");
 
   let templateWatcher;
@@ -35,6 +35,7 @@ export default async function watchCommand(paths, { apiKey, openBrowser, port, l
     if (template) {
       templateWatcher = await templateWatchCommand(template.path, {
         apiKey,
+        debug,
         openBrowser,
         port,
         livereloadPort,
