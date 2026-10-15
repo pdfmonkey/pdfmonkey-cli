@@ -145,6 +145,16 @@ Alternatively, you can set the `PORT` and `LIVE_RELOAD_PORT` environment variabl
 PORT=2083 LIVE_RELOAD_PORT=2084 pdfmonkey template watch
 ```
 
+### Debug Preview
+
+Sometimes, it can be easier to debug the generated HTML instead of the PDF. You can do this by using the `-D` or `--debug` option.
+
+```bash
+pdfmonkey template watch -D -o
+```
+
+This will open the debug preview in your default browser.
+
 ### Dealing with conflicts
 
 When starting the `watch` command, the CLI will check if there are any conflicts between the local files and the template data. If there are, you will be prompted to choose between:
