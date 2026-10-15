@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 2.1.0 (2026-10-15)
 
 - Restoring the `--debug` option of `watch` commands
 
